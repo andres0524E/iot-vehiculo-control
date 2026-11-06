@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="es" data-bs-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#25262c">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="format-detection" content="telephone=no">
+  <title>Control retro vehículo IoT - AWS & RDS</title>
+  <link rel="icon" type="image/svg+xml" href="./assets/favicon.svg">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="./css/styles.css">
+</head>
+<body class="app">
+
+  <header class="app-head">
+    <div class="app-title">
+      <i class="bi bi-controller" aria-hidden="true"></i>
+      <div class="app-title-text">
+        <h1 id="vehicle-name">Cargando vehículo...</h1>
+        <small id="vehicle-meta">ID: 1 · Modo control retro</small>
+      </div>
+    </div>
+    <button id="btn-refresh-health" type="button" class="btn refresh-btn" aria-label="Comprobar estado de servicios">
+      <i class="bi bi-arrow-clockwise" aria-hidden="true"></i> <span class="refresh-text">Verificar red</span>
+    </button>
+  </header>
+
+  <main class="deck">
+    <!-- panel de 3 indicadores de conectividad -->
+    <section aria-label="Estado de conectividad" class="stat">
+      <div id="ind-ws" class="status-card status-warning" role="status" aria-live="polite">
+        <i id="ind-ws-icon" class="bi bi-arrow-repeat status-icon" aria-hidden="true"></i>
+        <div class="status-info">
+          <span class="status-label">WebSocket WSS (Sesión navegador)</span>
+          <strong id="ind-ws-text" class="status-value">Conectando</strong>
+        </div>
+      </div>
+      <div id="ind-api" class="status-card status-warning" role="status" aria-live="polite">
+        <i id="ind-api-icon" class="bi bi-cloud-check status-icon" aria-hidden="true"></i>
+        <div class="status-info">
+          <span class="status-label">Servidor AWS · API de 21 servicios</span>
+          <strong id="ind-api-text" class="status-value">Comprobando</strong>
+        </div>
+      </div>
+      <div id="ind-rds" class="status-card status-neutral" role="status" aria-live="polite">
+        <i id="ind-rds-icon" class="bi bi-database-dash status-icon" aria-hidden="true"></i>
+        <div class="status-info">
+          <span class="status-label">Amazon RDS (Persistencia MySQL)</span>
+          <strong id="ind-rds-text" class="status-value">Sin verificar</strong>
+        </div>
+      </div>
+    </section>
+
+    <!-- pantalla LCD de telemetria de control -->
+    <section aria-label="Retroalimentación de acción actual" class="lcd">
+      <div class="lcd-row">
+        <span class="badge bg-secondary" id="action-phase-badge">En espera</span>
+        <span id="action-feedback-text" class="lcd-text">Listo para enviar comandos de control.</span>
+      </div>
+      <div class="lcd-ws" id="ws-last-event">WSS: Esperando evento...</div>
+    </section>
+
+    <!-- joystick tactil y detener prioritario -->
+    <section class="panel ctl" aria-label="Control direccional">
+      <div class="panel-head">
+        <span class="panel-title"><i class="bi bi-joystick text-info" aria-hidden="true"></i> Control direccional</span>
+        <span id="joystick-direction-label" class="badge text-bg-dark border border-secondary">Neutral</span>
+      </div>
+      <div class="ctl-body">
+        <div id="joystick-zone" class="joystick-base" role="application" aria-label="Joystick direccional táctil" tabindex="0">
+          <span class="joy-dir joy-up" aria-hidden="true"><i class="bi bi-caret-up-fill"></i></span>
+          <span class="joy-dir joy-down" aria-hidden="true"><i class="bi bi-caret-down-fill"></i></span>
+          <span class="joy-dir joy-left" aria-hidden="true"><i class="bi bi-caret-left-fill"></i></span>
+          <span class="joy-dir joy-right" aria-hidden="true"><i class="bi bi-caret-right-fill"></i></span>
+          <div id="joystick-stick" class="joystick-stick">
+            <i class="bi bi-arrows-move text-light" aria-hidden="true"></i>
+          </div>
+        </div>
+        <button id="btn-emergency-stop" type="button" class="btn stop-priority-btn">
+          <i class="bi bi-octagon-fill" aria-hidden="true"></i>
+          <span>Detener vehículo (Espacio)</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- catalogo de movimientos exclusivos (sin demo_software) -->
+    <section class="panel cat" aria-label="Catálogo de movimientos">
+      <div class="panel-head">
+        <span class="panel-title"><i class="bi bi-grid-3x3-gap text-info" aria-hidden="true"></i> Catálogo de movimientos</span>
+        <small id="catalog-count">0 comandos</small>
+      </div>
+      <div class="cat-scroll">
+        <div id="commands-grid" role="group" aria-label="Botones de comandos del vehículo">
+          <div class="col-12 cat-empty">Cargando comandos desde AWS RDS...</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- selector y ejecucion de demo -->
+    <section class="panel demo" aria-label="Secuencias demo">
+      <div class="panel-head">
+        <span class="panel-title"><i class="bi bi-play-btn text-info" aria-hidden="true"></i> Secuencias demo</span>
+        <span id="demo-status-badge" class="badge bg-secondary">Inactiva</span>
+      </div>
+      <div class="demo-body">
+        <label for="select-demo" class="demo-label">Seleccionar secuencia almacenada en RDS:</label>
+        <select id="select-demo" class="form-select bg-body-tertiary text-light border-secondary">
+          <option value="">Cargando secuencias demo...</option>
+        </select>
+        <div class="demo-actions">
+          <button id="btn-start-demo" type="button" class="btn btn-success fw-semibold" disabled>
+            <i class="bi bi-play-fill" aria-hidden="true"></i> Iniciar demo
+          </button>
+          <button id="btn-cancel-demo" type="button" class="btn btn-warning fw-semibold" disabled>
+            <i class="bi bi-stop-circle" aria-hidden="true"></i> Cancelar demo
+          </button>
+        </div>
+        <small id="demo-progress-text" class="demo-text">
+          Los movimientos de demo se coordinan en el backend por WSS sin saturar el historial individual.
+        </small>
+      </div>
+    </section>
+  </main>
+
+  <footer class="app-foot">
+    Desarrollado por Andrés Jeriel Cruz Reséndiz · 2026
+  </footer>
+
+  <script type="module" src="./js/main.js"></script>
+</body>
+</html>
