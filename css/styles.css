@@ -14,7 +14,7 @@
   --retro-purple-2: #ffc233;
   --lcd-bg: #d9b64f;
   --lcd-ink: #2a1c04;
-  --joy: clamp(96px, min(44vw, 22dvh), 190px);
+  --joy: clamp(96px, min(30vw, 22dvh), 170px);
   --stick: calc(var(--joy) * 0.3);
   --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, "Courier New", monospace;
 }
@@ -70,9 +70,9 @@ body.app {
   min-height: 0;
   display: grid;
   gap: 8px;
-  grid-template-columns: minmax(0, 1fr);
-  grid-template-rows: auto auto auto minmax(84px, 1fr) auto;
-  grid-template-areas: "stat" "lcd" "ctl" "cat" "demo";
+  grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+  grid-template-rows: auto auto auto minmax(150px, 1fr);
+  grid-template-areas: "stat stat" "lcd lcd" "ctl demo" "cat cat";
   padding: 12px;
   color: var(--ink);
   background: linear-gradient(170deg, var(--shell-1), var(--shell-2));
@@ -141,7 +141,7 @@ body.app {
 .panel-head .badge { flex: none; transition: background-color 0.25s; }
 
 /* ---------- cruceta (joystick) + detener ---------- */
-.ctl-body { display: flex; align-items: center; justify-content: space-around; gap: 12px; padding: 2px 4px; }
+.ctl-body { display: flex; align-items: center; justify-content: center; padding: 2px 4px; }
 
 .joystick-base {
   position: relative; flex: none; width: var(--joy); height: var(--joy); border-radius: 50%;
@@ -175,17 +175,18 @@ body.app {
 .joy-dir { position: absolute; z-index: 1; color: #bdbdc5; font-size: clamp(0.7rem, calc(var(--joy) * 0.085), 1rem); pointer-events: none; line-height: 1; }
 .joy-up { top: 9%; } .joy-down { bottom: 9%; } .joy-left { left: 9%; } .joy-right { right: 9%; }
 
+.cat-stop { flex: none; padding: 6px 16px 14px; }
 .stop-priority-btn {
-  flex: 1 1 0; min-width: 0; height: var(--joy); max-height: 140px; min-height: 52px;
-  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
-  padding: 6px; font-size: 0.85rem; font-weight: 700; line-height: 1.15; color: #fff;
+  width: 100%; height: 54px; min-height: 48px;
+  display: flex; flex-direction: row; align-items: center; justify-content: center; gap: 10px;
+  padding: 6px 10px; font-size: 0.9rem; font-weight: 700; line-height: 1.15; color: #fff;
   background: radial-gradient(ellipse 55% 22% at 50% 16%, rgba(255, 255, 255, 0.6), rgba(255, 255, 255, 0)), radial-gradient(circle at 50% 30%, #ee7d86, #c4434e 55%, #8f2530);
-  border: 3px solid #7a1f27; border-radius: 22px; margin-bottom: 8px;
-  box-shadow: 0 0 0 5px #3f3f45, 0 9px 0 #5a1a20, 0 13px 10px rgba(0, 0, 0, 0.4), inset 0 -4px 6px rgba(0, 0, 0, 0.25);
+  border: 3px solid #7a1f27; border-radius: 22px;
+  box-shadow: 0 0 0 5px #1f1f23, 0 9px 0 #5a1a20, 0 13px 10px rgba(0, 0, 0, 0.4), inset 0 -4px 6px rgba(0, 0, 0, 0.25);
   transition: transform 0.08s, box-shadow 0.08s;
 }
-.stop-priority-btn .bi { font-size: 1.5rem; }
-.stop-priority-btn:active { transform: translateY(7px); box-shadow: 0 0 0 5px #3f3f45, 0 2px 0 #5a1a20, 0 3px 4px rgba(0, 0, 0, 0.4), inset 0 4px 8px rgba(0, 0, 0, 0.4); }
+.stop-priority-btn .bi { font-size: 1.3rem; }
+.stop-priority-btn:active { transform: translateY(7px); box-shadow: 0 0 0 5px #1f1f23, 0 2px 0 #5a1a20, 0 3px 4px rgba(0, 0, 0, 0.4), inset 0 4px 8px rgba(0, 0, 0, 0.4); }
 
 /* ---------- placa de botones (catálogo) ---------- */
 .cat {
@@ -270,12 +271,12 @@ body.app {
 .demo-body { display: flex; flex-direction: column; gap: 4px; }
 .demo-label { font-size: 0.65rem; color: #3b2f18; line-height: 1.2; margin: 0; }
 .demo-body .form-select { min-height: 44px; font-size: 16px; background-color: #3d3d45 !important; border: 2px solid #2b2b31 !important; box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.5); }
-.demo-actions { display: flex; justify-content: center; gap: 22px; }
+.demo-actions { display: flex; justify-content: center; gap: 10px; }
 .demo-actions .btn {
   --bs-btn-color: #3b2f18; --bs-btn-hover-color: #25252b; --bs-btn-active-color: #25252b; --bs-btn-disabled-color: #3b2f18;
   --bs-btn-bg: transparent; --bs-btn-hover-bg: transparent; --bs-btn-active-bg: transparent; --bs-btn-disabled-bg: transparent;
   --bs-btn-border-color: transparent; --bs-btn-hover-border-color: transparent; --bs-btn-active-border-color: transparent; --bs-btn-disabled-border-color: transparent;
-  position: relative; flex: 0 1 130px; min-height: 64px; padding: 0 4px 4px;
+  position: relative; flex: 1 1 0; max-width: 130px; min-height: 64px; padding: 0 4px 4px;
   display: flex; flex-direction: column; align-items: center; justify-content: flex-start; gap: 16px;
   font-size: 0.68rem; font-weight: 700 !important; font-style: italic; letter-spacing: 0.4px; line-height: 1.1;
   background: none; border: 0; box-shadow: none; transition: opacity 0.2s;
@@ -304,9 +305,9 @@ body.app {
 
 /* ---------- horizontal: el control tumbado ---------- */
 @media (orientation: landscape) {
-  :root { --joy: clamp(96px, min(52dvh, 24vw), 200px); }
+  :root { --joy: clamp(96px, min(46dvh, 20vw), 230px); }
   .deck {
-    grid-template-columns: minmax(0, 0.95fr) minmax(0, 1fr) minmax(0, 1.2fr);
+    grid-template-columns: minmax(0, 0.7fr) minmax(0, 1.1fr) minmax(0, 1.2fr);
     grid-template-rows: auto auto minmax(0, 1fr);
     grid-template-areas: "stat stat stat" "ctl lcd cat" "ctl demo cat";
     padding: 10px 16px; border-radius: 44px; gap: 6px 12px;
@@ -315,17 +316,24 @@ body.app {
   .stat .status-label { font-size: 0.66rem; }
   .stat .status-value { font-size: 0.78rem; }
   .stat .status-info { flex-direction: row; flex-wrap: wrap; column-gap: 6px; align-items: baseline; }
-  .ctl-body { flex-direction: column; gap: 12px; }
-  .stop-priority-btn { flex: none; width: 100%; height: 50px; min-height: 48px; flex-direction: row; }
-  .stop-priority-btn .bi { font-size: 1.2rem; }
-  .demo { display: flex; flex-direction: column; }
-  .demo-body { flex: 1; min-height: 0; }
+  .demo { display: flex; flex-direction: column; min-height: 0; overflow: hidden; }
+  .demo-body { flex: 1; min-height: 0; overflow-y: auto; scrollbar-width: none; }
+  .demo-body::-webkit-scrollbar { display: none; }
   .app-title h1 { font-size: 0.9rem; }
 }
+/* celular acostado: todo más compacto para que quepa sin scroll */
 @media (orientation: landscape) and (max-height: 430px) {
-  .lcd { padding: 4px 8px; height: 4.3rem; }
+  body.app { gap: 4px; padding-top: max(4px, env(safe-area-inset-top)); }
+  .deck { padding: 6px 14px; gap: 4px 10px; }
+  .stat .status-card { height: 2.2rem; }
+  .lcd { padding: 4px 8px; height: 3.7rem; }
+  .lcd-ws { -webkit-line-clamp: 1; line-clamp: 1; }
   .refresh-text { display: none; }
+  .demo { padding: 6px 10px; }
   .demo-label { display: none; }
+  .demo-actions .btn { min-height: 60px; gap: 14px; }
+  .cat-stop { padding: 4px 14px 10px; }
+  .stop-priority-btn { height: 46px; min-height: 44px; }
 }
 
 /* ---------- animaciones ---------- */
