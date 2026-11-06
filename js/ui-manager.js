@@ -1,3 +1,15 @@
+const SIGLAS = new Set(["LED", "LEDS", "USB", "GPS", "RGB", "IA"]);
+
+// solo presentacion: "BAJAR_BRAZO" -> "Bajar Brazo", "giro 90 der" -> "Giro 90 Der"
+function formatear_nombre(nombre) {
+  return String(nombre ?? "")
+    .replace(/_/g, " ")
+    .trim()
+    .split(/\s+/)
+    .map((p) => (SIGLAS.has(p.toUpperCase()) ? p.toUpperCase() : p.charAt(0).toUpperCase() + p.slice(1).toLowerCase()))
+    .join(" ");
+}
+
 export class UiManager {
   constructor() {
     this.el_vehicle_name = document.getElementById("vehicle-name");
@@ -125,7 +137,7 @@ export class UiManager {
       btn.dataset.nombreComando = String(cmd.nombre || "");
 
       const span_nombre = document.createElement("span");
-      span_nombre.textContent = cmd.nombre;
+      span_nombre.textContent = formatear_nombre(cmd.nombre);
 
       const small_cod = document.createElement("small");
       small_cod.className = "text-secondary font-monospace";
