@@ -11,6 +11,51 @@ export class CommandController {
     this.demo_activa = false;
   }
 
+  _normalizar_texto(texto) {
+    return String(texto || "")
+      .toLowerCase()
+      .replace(/_/g, " ")
+      .replace(/\s+/g, " ")
+      .trim();
+  }
+
+  _es_giro_por_grados(nom_norm, cod_str) {
+    return (
+      cod_str === "13" ||
+      cod_str === "14" ||
+      cod_str === "15" ||
+      nom_norm.includes("90") ||
+      nom_norm.includes("360") ||
+      nom_norm.includes("vuelta")
+    );
+  }
+
+  _es_izquierda_continua(nom_norm, cod_str) {
+    if (this._es_giro_por_grados(nom_norm, cod_str)) return false;
+    if (nom_norm.includes("palanca")) return false;
+    return (
+      cod_str === "8" ||
+      cod_str === "l" ||
+      nom_norm === "girar izquierda" ||
+      nom_norm === "izquierda" ||
+      nom_norm.includes("izquierda") ||
+      nom_norm.includes("izq")
+    );
+  }
+
+  _es_derecha_continua(nom_norm, cod_str) {
+    if (this._es_giro_por_grados(nom_norm, cod_str)) return false;
+    if (nom_norm.includes("palanca")) return false;
+    return (
+      cod_str === "7" ||
+      cod_str === "j" ||
+      nom_norm === "girar derecha" ||
+      nom_norm === "derecha" ||
+      nom_norm.includes("derecha") ||
+      nom_norm.includes("der")
+    );
+  }
+
   configurar_catalogo(lista_comandos) {
     this.catalogo = Array.isArray(lista_comandos) ? lista_comandos : [];
     this.mapa_direcciones = {};
@@ -18,46 +63,61 @@ export class CommandController {
 
     this.catalogo.forEach((cmd) => {
       if (!Boolean(cmd.activo ?? 1)) return;
-      const nom = String(cmd.nombre || "").toUpperCase().trim();
+      const nom = this._normalizar_texto(cmd.nombre);
+      const cod_str = String(cmd.codigo || "").toLowerCase().trim();
 
-      if (nom.includes("DETENER") || nom.includes("STOP") || nom.includes("PARAR")) {
+      if (cod_str === "9" || cod_str === "0" || nom.includes("detener") || nom.includes("stop") || nom.includes("parar")) {
         this.comando_detener = cmd;
-      } else if (nom.includes("AVANZAR") || nom.includes("ADELANTE") || nom === "FRENTE") {
+      } else if (cod_str === "1" || cod_str === "d" || nom.includes("avanzar") || nom.includes("adelante") || nom === "frente") {
+        this.mapa_direcciones.up = cmd;
         this.mapa_direcciones.UP = cmd;
-      } else if (nom.includes("RETROCEDER") || nom.includes("ATRAS") || nom.includes("REVERSA")) {
+      } else if (cod_str === "2" || cod_str === "s" || nom.includes("retroceder") || nom.includes("atras") || nom.includes("reversa")) {
+        this.mapa_direcciones.down = cmd;
         this.mapa_direcciones.DOWN = cmd;
-      } else if (nom.includes("IZQUIERDA") && !nom.includes("90") && !nom.includes("360")) {
+      } else if (this._es_izquierda_continua(nom, cod_str)) {
+        this.mapa_direcciones.left = cmd;
         this.mapa_direcciones.LEFT = cmd;
-      } else if (nom.includes("DERECHA") && !nom.includes("90") && !nom.includes("360")) {
+      } else if (this._es_derecha_continua(nom, cod_str)) {
+        this.mapa_direcciones.right = cmd;
         this.mapa_direcciones.RIGHT = cmd;
       }
     });
 
-    // filtramos el catalogo para la interfaz: excluimos los de la palanca y detener
-    // filtramos el catalogo para la interfaz: excluimos palanca, detener y DEMO_SOFTWARE
+    // filtramos el catalogo para la interfaz: excluimos palanca, detener y demo_software
     const comandos_exclusivos = this.catalogo.filter((cmd) => {
       if (!Boolean(cmd.activo ?? 1)) return false;
-      const nom = String(cmd.nombre || "").toUpperCase().trim();
-      const es_detener = nom.includes("DETENER") || nom.includes("STOP") || nom.includes("PARAR");
-      const es_demo_software = nom.includes("DEMO") || nom.includes("SOFTWARE");
-      const es_palanca = 
-        nom.includes("AVANZAR") || nom.includes("ADELANTE") || nom === "FRENTE" ||
-        nom.includes("RETROCEDER") || nom.includes("ATRAS") || nom.includes("REVERSA") ||
-        (nom.includes("IZQUIERDA") && !nom.includes("90") && !nom.includes("360")) ||
-        (nom.includes("DERECHA") && !nom.includes("90") && !nom.includes("360"));
+      const nom = this._normalizar_texto(cmd.nombre);
+      const cod_str = String(cmd.codigo || "").toLowerCase().trim();
+
+      const es_detener = cod_str === "9" || cod_str === "0" || nom.includes("detener") || nom.includes("stop") || nom.includes("parar");
+      const es_demo_software = cod_str === "12" || cod_str === "r" || nom.includes("demo") || nom.includes("software");
+      const es_palanca =
+        cod_str === "1" ||
+        cod_str === "d" ||
+        cod_str === "2" ||
+        cod_str === "s" ||
+        nom.includes("avanzar") ||
+        nom.includes("adelante") ||
+        nom === "frente" ||
+        nom.includes("retroceder") ||
+        nom.includes("atras") ||
+        nom.includes("reversa") ||
+        this._es_izquierda_continua(nom, cod_str) ||
+        this._es_derecha_continua(nom, cod_str);
 
       return !es_detener && !es_palanca && !es_demo_software;
     });
 
-    // renderizamos en la ui solo los botones exclusivos (giros 90, 360, sonidos, leds, etc.)
+    // renderizamos en la ui solo los botones exclusivos (brazos, giros 90, vuelta 360, sonido, led, etc.)
     this.ui.renderizar_botones_comandos(comandos_exclusivos, (cmd) => {
       this.solicitar_comando(cmd, false);
     });
   }
 
   obtener_comando_por_direccion(direccion) {
-    if (direccion === "NEUTRAL") return this.comando_detener;
-    return this.mapa_direcciones[direccion] || null;
+    const dir_norm = String(direccion || "").toLowerCase().trim();
+    if (dir_norm === "neutral") return this.comando_detener;
+    return this.mapa_direcciones[dir_norm] || this.mapa_direcciones[direccion] || null;
   }
 
   async ejecutar_detener_prioritario(razon = "detencion prioritaria solicitada") {
@@ -74,7 +134,7 @@ export class CommandController {
     }
 
     if (!this.comando_detener) {
-      this.ui.mostrar_estado_accion("error", "no existe un comando DETENER activo en el catalogo");
+      this.ui.mostrar_estado_accion("error", "no existe un comando detener activo en el catalogo");
       return;
     }
 

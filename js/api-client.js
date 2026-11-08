@@ -6,9 +6,10 @@ export class ApiClient {
     this.timeout_ms = config.http_timeout_ms;
   }
 
-  async _request(endpoint, options = {}) {
+  async _request(endpoint, options = {}, timeout_override_ms = null) {
     const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), this.timeout_ms);
+    const limite_ms = timeout_override_ms || this.timeout_ms;
+    const timer = setTimeout(() => controller.abort(), limite_ms);
 
     const url = `${this.base_url}${endpoint}`;
     const headers = {
@@ -46,6 +47,7 @@ export class ApiClient {
       if (error.name === "AbortError") {
         const timeout_err = new Error("tiempo de espera agotado hacia aws ec2");
         timeout_err.status = 408;
+        timeout_err.is_timeout = true;
         throw timeout_err;
       }
       throw error;
@@ -54,8 +56,8 @@ export class ApiClient {
     }
   }
 
-  async verificar_salud_api() {
-    return await this._request(config.endpoints.salud, { method: "GET" });
+  async verificar_salud_api(timeout_ms = 5000) {
+    return await this._request(config.endpoints.salud, { method: "GET", cache: "no-store" }, timeout_ms);
   }
 
   async obtener_vehiculo(id_vehiculo = config.id_vehiculo) {

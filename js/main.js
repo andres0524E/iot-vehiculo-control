@@ -11,7 +11,12 @@ const ui = new UiManager();
 const cmd_controller = new CommandController(api, ui);
 const demo_controller = new DemoController(api, ui, cmd_controller);
 
+let api_en_linea = false;
+let rds_confirmado = false;
+let fallos_consecutivos_api = 0;
+
 ui.indicador_rds_confirmado = () => {
+  rds_confirmado = true;
   ui.actualizar_indicador_rds("online", "Disponible (SP Verificado)");
 };
 
@@ -45,23 +50,43 @@ const ws_client = new WsClient(
   }
 );
 
-async function comprobar_conectividad_aws() {
-  ui.actualizar_indicador_api("connecting", "Comprobando");
+async function comprobar_conectividad_aws(silencioso = true) {
+  if (!silencioso || !api_en_linea) {
+    ui.actualizar_indicador_api("connecting", "Comprobando");
+  }
+
   try {
-    const salud = await api.verificar_salud_api();
-    if (salud && salud.estado === "operativo") {
-      ui.actualizar_indicador_api("online", "Disponible");
-    } else {
-      ui.actualizar_indicador_api("online", "Disponible");
+    const salud = await api.verificar_salud_api(5000);
+    fallos_consecutivos_api = 0;
+
+    if (!api_en_linea || !silencioso) {
+      api_en_linea = true;
+      if (salud && salud.estado === "operativo") {
+        ui.actualizar_indicador_api("online", "Disponible");
+      } else {
+        ui.actualizar_indicador_api("online", "Disponible");
+      }
+    }
+
+    if (rds_confirmado) {
+      ui.actualizar_indicador_rds("online", "Disponible (SP Verificado)");
     }
   } catch (_err) {
-    ui.actualizar_indicador_api("offline", "No disponible");
-    ui.actualizar_indicador_rds("neutral", "Sin verificar (API Caída)");
+    fallos_consecutivos_api += 1;
+
+    // protege contra microcortes de red: solo marca caida tras 2 fallos seguidos o en chequeo manual
+    if (!silencioso || fallos_consecutivos_api >= 2) {
+      api_en_linea = false;
+      ui.actualizar_indicador_api("offline", "No disponible");
+      if (!rds_confirmado) {
+        ui.actualizar_indicador_rds("neutral", "Sin verificar (API Caída)");
+      }
+    }
   }
 }
 
 async function cargar_datos_iniciales() {
-  await comprobar_conectividad_aws();
+  await comprobar_conectividad_aws(false);
 
   try {
     const [vehiculo, comandos, demos] = await Promise.all([
@@ -71,17 +96,19 @@ async function cargar_datos_iniciales() {
     ]);
 
     // rds verificado correctamente mediante stored procedures
+    rds_confirmado = true;
     ui.actualizar_indicador_rds("online", "Disponible (SP Verificado)");
     ui.actualizar_datos_vehiculo(vehiculo);
 
-    // configura el catálogo y renderiza únicamente los botones exclusivos (excluyendo joystick y detener)
+    // configura el catalogo y renderiza unicamente los botones exclusivos (excluyendo joystick y detener)
     cmd_controller.configurar_catalogo(comandos);
 
     ui.renderizar_selector_demos(demos);
   } catch (error) {
     if (error.is_db_error || error.status === 500) {
+      rds_confirmado = false;
       ui.actualizar_indicador_rds("offline", "No disponible (Error SP/RDS)");
-    } else {
+    } else if (!rds_confirmado) {
       ui.actualizar_indicador_rds("neutral", "Sin verificar");
     }
     ui.mostrar_estado_accion("error", `no se pudo cargar el catalogo inicial: ${error.message}`);
@@ -117,4 +144,4 @@ window.addEventListener("keydown", (e) => {
 // inicio de aplicacion
 ws_client.conectar(config.id_vehiculo);
 cargar_datos_iniciales();
-setInterval(comprobar_conectividad_aws, config.health_poll_interval_ms);
+setInterval(() => comprobar_conectividad_aws(true), config.health_poll_interval_ms);
