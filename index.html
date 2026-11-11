@@ -8,29 +8,41 @@
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="format-detection" content="telephone=no">
-  <title>Control retro vehículo IoT - AWS & RDS</title>
-  <link rel="icon" type="image/svg+xml" href="./assets/favicon.svg">
+  <title>Control y Monitoreo Vehículo IoT - AWS & RDS</title>
+  <link rel="icon" type="image/svg+xml" href="./assets/img/favicon.svg">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
-  <link rel="stylesheet" href="./css/styles.css">
+  <link rel="stylesheet" href="./assets/css/styles.css">
 </head>
-<body class="app">
+<body class="app" data-view="control">
 
   <header class="app-head">
     <div class="app-title">
       <i class="bi bi-controller" aria-hidden="true"></i>
       <div class="app-title-text">
         <h1 id="vehicle-name">Cargando vehículo...</h1>
-        <small id="vehicle-meta">ID: 1 · Modo control retro</small>
+        <small id="vehicle-meta">Control remoto</small>
       </div>
     </div>
+
+    <nav class="app-nav" aria-label="Navegación entre Control y Monitoreo">
+      <button id="tab-control" type="button" class="btn nav-tab active" aria-current="page" data-view-target="control">
+        <i class="bi bi-joystick" aria-hidden="true"></i>
+        <span>Control</span>
+      </button>
+      <button id="tab-monitoreo" type="button" class="btn nav-tab" data-view-target="monitoreo">
+        <i class="bi bi-activity" aria-hidden="true"></i>
+        <span>Monitoreo</span>
+      </button>
+    </nav>
+
     <button id="btn-refresh-health" type="button" class="btn refresh-btn" aria-label="Comprobar estado de servicios">
       <i class="bi bi-arrow-clockwise" aria-hidden="true"></i> <span class="refresh-text">Verificar red</span>
     </button>
   </header>
 
   <main class="deck">
-    <!-- panel de 3 indicadores de conectividad -->
+    <!-- panel de 3 indicadores de conectividad compartidos por CONTROL y MONITOREO -->
     <section aria-label="Estado de conectividad" class="stat">
       <div id="ind-ws" class="status-card status-warning" role="status" aria-live="polite">
         <i id="ind-ws-icon" class="bi bi-arrow-repeat status-icon" aria-hidden="true"></i>
@@ -55,17 +67,34 @@
       </div>
     </section>
 
-    <!-- pantalla LCD de telemetria de control -->
-    <section aria-label="Retroalimentación de acción actual" class="lcd">
-      <div class="lcd-row">
-        <span class="badge bg-secondary" id="action-phase-badge">En espera</span>
-        <span id="action-feedback-text" class="lcd-text">Listo para enviar comandos</span>
+    <!-- ================= VISTA CONTROL ================= -->
+    <!-- pantalla LCD de telemetria de control + indicadores visuales LED y bocina -->
+    <section id="panel-control-lcd" aria-label="Retroalimentación de acción actual" class="lcd view-control">
+      <div class="lcd-main">
+        <div class="lcd-row">
+          <span id="ctrl-tx-dot" class="tx-dot" data-state="idle" role="status" aria-label="Actividad de movimiento: en espera" title="Actividad: En espera"></span>
+          <span class="badge bg-secondary" id="action-phase-badge">Listo</span>
+          <span id="action-feedback-text" class="lcd-text">Listo para enviar comandos</span>
+        </div>
+        <div class="lcd-ws" id="ws-last-event">Esperando actividad...</div>
       </div>
-      <div class="lcd-ws" id="ws-last-event">WSS: Esperando evento...</div>
+      <div class="lcd-hw" aria-label="Estado de LED y sonido del vehículo">
+        <div id="ctrl-led" class="hw-pill hw-led" data-state="on" role="status" aria-live="polite" aria-label="LED: Encendido" title="LED: Encendido">
+          <span class="led-bulb" aria-hidden="true"></span>
+          <span class="hw-label">LED</span>
+        </div>
+        <div id="ctrl-speaker" class="hw-pill hw-speaker" data-state="sounding" role="status" aria-live="polite" aria-label="Sonido: Encendido" title="Sonido: Encendido">
+          <span class="speaker-wrap" aria-hidden="true">
+            <i id="ctrl-speaker-icon" class="bi bi-volume-up-fill"></i>
+            <span class="sound-waves"><span></span><span></span></span>
+          </span>
+          <span class="hw-label">Sonido</span>
+        </div>
+      </div>
     </section>
 
     <!-- joystick tactil y detener prioritario -->
-    <section class="panel ctl" aria-label="Control direccional">
+    <section id="panel-control-ctl" class="panel ctl view-control" aria-label="Control direccional">
       <div class="panel-head">
         <span class="panel-title"><i class="bi bi-joystick text-info" aria-hidden="true"></i> Control direccional</span>
         <span id="joystick-direction-label" class="badge text-bg-dark border border-secondary">Neutral</span>
@@ -84,14 +113,14 @@
     </section>
 
     <!-- catalogo de movimientos exclusivos (sin demo_software) -->
-    <section class="panel cat" aria-label="Movimientos">
+    <section id="panel-control-cat" class="panel cat view-control" aria-label="Movimientos">
       <div class="panel-head">
         <span class="panel-title"><i class="bi bi-grid-3x3-gap text-info" aria-hidden="true"></i> Movimientos</span>
         <small id="catalog-count">0 comandos</small>
       </div>
       <div class="cat-scroll">
         <div id="commands-grid" role="group" aria-label="Botones de comandos del vehículo">
-          <div class="col-12 cat-empty">Cargando comandos desde AWS RDS...</div>
+          <div class="col-12 cat-empty">Cargando movimientos...</div>
         </div>
       </div>
       <div class="cat-stop">
@@ -103,15 +132,19 @@
     </section>
 
     <!-- selector y ejecucion de demo -->
-    <section class="panel demo" aria-label="Secuencias demo">
+    <section id="panel-control-demo" class="panel demo view-control" aria-label="Secuencias demo">
       <div class="panel-head">
         <span class="panel-title"><i class="bi bi-play-btn text-info" aria-hidden="true"></i> Secuencias demo</span>
         <span id="demo-status-badge" class="badge bg-secondary">Inactiva</span>
       </div>
       <div class="demo-body">
-        <label for="select-demo" class="demo-label">Seleccionar secuencia almacenada en RDS:</label>
+        <div id="demo-live-banner" class="demo-live-banner" role="status" aria-live="polite" hidden>
+          <span class="demo-live-dot" aria-hidden="true"></span>
+          <span id="demo-live-text">Demo en ejecución</span>
+        </div>
+        <label for="select-demo" class="demo-label">Seleccionar secuencia:</label>
         <select id="select-demo" class="form-select bg-body-tertiary text-light border-secondary">
-          <option value="">Cargando secuencias demo...</option>
+          <option value="">Cargando secuencias...</option>
         </select>
         <div class="demo-actions">
           <button id="btn-start-demo" type="button" class="btn btn-success fw-semibold" disabled>
@@ -124,12 +157,88 @@
         <small id="demo-progress-text" class="demo-text"></small>
       </div>
     </section>
+
+    <!-- ================= VISTA MONITOREO ================= -->
+    <!-- tarjeta destacada del ultimo movimiento reportado / demo en ejecucion -->
+    <section id="panel-monitoreo-last" class="panel mon-last view-monitoreo" aria-label="Último movimiento reportado" hidden>
+      <div class="panel-head">
+        <span class="panel-title"><i class="bi bi-broadcast-pin" aria-hidden="true"></i> Último movimiento reportado</span>
+        <span id="mon-last-source-badge" class="badge bg-secondary">Cargando</span>
+      </div>
+
+      <div id="mon-demo-banner" class="mon-demo-banner" role="status" aria-live="polite" hidden>
+        <span class="demo-live-dot" aria-hidden="true"></span>
+        <span id="mon-demo-banner-text">Demo en ejecución</span>
+      </div>
+
+      <div class="mon-last-card" role="status" aria-live="polite">
+        <div class="mon-last-top">
+          <span id="mon-last-vehicle" class="mon-vehicle-tag">Vehículo #1</span>
+          <span id="mon-last-code" class="badge text-bg-dark font-monospace" hidden></span>
+        </div>
+        <div id="mon-last-command" class="mon-command-title">Consultando último estado...</div>
+        <div class="mon-meta-grid">
+          <div class="mon-meta-item">
+            <span class="mon-meta-label">Fecha</span>
+            <strong id="mon-last-date" class="mon-meta-val font-monospace">—</strong>
+          </div>
+          <div class="mon-meta-item">
+            <span class="mon-meta-label">Hora</span>
+            <strong id="mon-last-time" class="mon-meta-val font-monospace">—</strong>
+          </div>
+          <div class="mon-meta-item mon-meta-origin">
+            <span class="mon-meta-label">Estado / Origen</span>
+            <strong id="mon-last-origin" class="mon-meta-val">—</strong>
+          </div>
+        </div>
+        <p id="mon-last-note" class="mon-last-note">Esperando respuesta de Amazon RDS...</p>
+        <small id="mon-tz-info" class="mon-tz-info"></small>
+      </div>
+    </section>
+
+    <!-- tabla dinamica de los ultimos diez movimientos individuales persistidos -->
+    <section id="panel-monitoreo-hist" class="panel cat mon-hist view-monitoreo" aria-label="Últimos diez movimientos persistidos" hidden>
+      <div class="panel-head">
+        <span class="panel-title"><i class="bi bi-clock-history text-info" aria-hidden="true"></i> Últimos 10 movimientos</span>
+        <div class="mon-hist-actions">
+          <small id="mon-hist-count">0 / 10</small>
+          <button id="btn-mon-sync" type="button" class="btn mon-sync-btn" aria-label="Sincronizar historial con Amazon RDS">
+            <i class="bi bi-arrow-repeat" aria-hidden="true"></i>
+            <span class="mon-sync-text">Sincronizar</span>
+          </button>
+        </div>
+      </div>
+
+      <div id="mon-hist-banner" class="mon-banner" role="alert" hidden></div>
+
+      <div class="mon-table-wrap table-responsive">
+        <table class="table table-dark table-sm align-middle mon-table" aria-describedby="mon-hist-caption">
+          <caption id="mon-hist-caption" class="visually-hidden">
+            Tabla de los últimos diez movimientos individuales persistidos en Amazon RDS ordenados del más reciente al más antiguo.
+          </caption>
+          <thead>
+            <tr>
+              <th scope="col" class="col-num">#</th>
+              <th scope="col" class="col-mov">Movimiento</th>
+              <th scope="col" class="col-cod">Cód.</th>
+              <th scope="col" class="col-date">Fecha</th>
+              <th scope="col" class="col-time">Hora</th>
+            </tr>
+          </thead>
+          <tbody id="mon-hist-tbody">
+            <tr>
+              <td colspan="5" class="mon-empty-cell">Cargando historial desde Amazon RDS...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
   </main>
 
   <footer class="app-foot">
     Desarrollado por Andrés Jeriel Cruz Reséndiz · 2026
   </footer>
 
-  <script type="module" src="./js/main.js"></script>
+  <script type="module" src="./assets/js/main.js"></script>
 </body>
 </html>

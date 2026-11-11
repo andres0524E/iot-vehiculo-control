@@ -1,3 +1,5 @@
+import { formatear_nombre_comando } from "./format-utils.js";
+
 export class CommandController {
   constructor(api_client, ui_manager) {
     this.api = api_client;
@@ -134,7 +136,7 @@ export class CommandController {
     }
 
     if (!this.comando_detener) {
-      this.ui.mostrar_estado_accion("error", "no existe un comando detener activo en el catalogo");
+      this.ui.mostrar_estado_accion("error", "Acción detener no disponible");
       return;
     }
 
@@ -151,7 +153,7 @@ export class CommandController {
     }
 
     if (this.demo_activa) {
-      this.ui.mostrar_estado_accion("error", "bloqueado: hay una demo en ejecucion.");
+      this.ui.mostrar_estado_accion("error", "Espera a que termine la secuencia");
       return;
     }
 
@@ -166,13 +168,12 @@ export class CommandController {
     await this._enviar_a_api(cmd, seq_actual, false);
   }
 
-  async _enviar_a_api(cmd, seq_id, es_prioritario, nota_extra = "") {
+  async _enviar_a_api(cmd, seq_id, es_prioritario, _nota_extra = "") {
     this.solicitud_en_curso = true;
+    const nombre_limpio = formatear_nombre_comando(cmd.nombre);
     this.ui.marcar_estado_boton_comando(cmd.id_comando, "sending");
-    this.ui.mostrar_estado_accion(
-      "solicitado",
-      `solicitado: ${cmd.nombre} (cód ${cmd.codigo}) ${nota_extra ? "· " + nota_extra : ""}`
-    );
+    this.ui.mostrar_estado_accion("solicitado", `Enviando: ${nombre_limpio}`);
+    this.ui.actualizar_puntito_actividad("sending", `Enviando ${nombre_limpio}`);
 
     try {
       const resp = await this.api.enviar_movimiento(cmd.id_comando);
@@ -181,18 +182,22 @@ export class CommandController {
         return;
       }
 
+      const nom_confirmado = formatear_nombre_comando(resp.comando || cmd.nombre);
       this.ui.indicador_rds_confirmado?.();
       this.ui.marcar_estado_boton_comando(cmd.id_comando, "accepted");
-      this.ui.mostrar_estado_accion(
-        "aceptado",
-        `aceptado por api (http 201): ${resp.comando || cmd.nombre} · esperando wss`
+      this.ui.mostrar_estado_accion("aceptado", `Orden enviada: ${nom_confirmado}`);
+      // evita doble toggle si wss en linea confirmara el evento en vivo
+      this.ui.reflejar_comando_visual(
+        { codigo: cmd.codigo, nombre: resp.comando || cmd.nombre },
+        { alternar_toggles: !this.ui.ws_en_linea }
       );
-    } catch (error) {
+    } catch (_error) {
       if (seq_id !== this.secuencia_peticion && !es_prioritario) {
         return;
       }
       this.ui.marcar_estado_boton_comando(cmd.id_comando, "error");
-      this.ui.mostrar_estado_accion("error", `fallo al enviar ${cmd.nombre}: ${error.message}`);
+      this.ui.mostrar_estado_accion("error", `No se pudo enviar ${nombre_limpio}`);
+      this.ui.actualizar_puntito_actividad("error", "Error al enviar", 1800);
     } finally {
       this.solicitud_en_curso = false;
     }
