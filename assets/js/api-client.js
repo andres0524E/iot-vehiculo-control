@@ -68,6 +68,14 @@ export class ApiClient {
     return await this._request(config.endpoints.comandos(id_vehiculo), { method: "GET" });
   }
 
+  async obtener_estado(id_vehiculo = config.id_vehiculo) {
+    return await this._request(config.endpoints.estado(id_vehiculo), { method: "GET", cache: "no-store" });
+  }
+
+  async obtener_historial(id_vehiculo = config.id_vehiculo) {
+    return await this._request(config.endpoints.historial(id_vehiculo), { method: "GET", cache: "no-store" });
+  }
+
   async obtener_demos(id_vehiculo = config.id_vehiculo) {
     return await this._request(config.endpoints.demos(id_vehiculo), { method: "GET" });
   }
