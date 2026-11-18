@@ -13,6 +13,12 @@ export class CommandController {
     this.solicitud_en_curso = false;
     this.secuencia_peticion = 0;
     this.demo_activa = false;
+    this.bloqueado_por_invitado = false;
+  }
+
+  establecer_bloqueo_invitado(bloqueado) {
+    this.bloqueado_por_invitado = Boolean(bloqueado);
+    this.ui.establecer_bloqueo_invitado_ui?.(this.bloqueado_por_invitado);
   }
 
   establecer_filtro_codigos(codigos_permitidos) {
@@ -139,6 +145,9 @@ export class CommandController {
     this.ui.renderizar_botones_comandos(comandos_exclusivos, (cmd) => {
       this.solicitar_comando(cmd, false);
     });
+    if (this.bloqueado_por_invitado) {
+      this.ui.establecer_bloqueo_invitado_ui?.(true);
+    }
   }
 
   obtener_comando_por_direccion(direccion) {
@@ -148,6 +157,9 @@ export class CommandController {
   }
 
   async ejecutar_detener_prioritario(razon = "detencion prioritaria solicitada") {
+    if (this.bloqueado_por_invitado) {
+      return;
+    }
     this.secuencia_peticion += 1;
     const seq_actual = this.secuencia_peticion;
     this.ultimo_comando_enviado_id = this.comando_detener ? this.comando_detener.id_comando : null;
@@ -169,7 +181,7 @@ export class CommandController {
   }
 
   async solicitar_comando(cmd, desde_joystick = false) {
-    if (!cmd) return;
+    if (!cmd || this.bloqueado_por_invitado) return;
 
     const es_detener = this.comando_detener && cmd.id_comando === this.comando_detener.id_comando;
     if (es_detener) {

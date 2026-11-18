@@ -104,7 +104,7 @@ class Settings:
 
         self.cors_origins: List[str] = _parse_cors_origins(os.getenv("CORS_ORIGINS"))
 
-        self.guest_session_minutes: int = _parse_int(os.getenv("GUEST_SESSION_MINUTES"), 3)
+        self.guest_session_minutes: int = _parse_int(os.getenv("GUEST_SESSION_MINUTES"), 10)
         self.support_default_minutes: int = _parse_int(os.getenv("SUPPORT_DEFAULT_MINUTES"), 30)
         self.demo_max_pasos: int = _parse_int(os.getenv("DEMO_MAX_PASOS"), 30)
         self.demo_min_duracion_ms: int = _parse_int(os.getenv("DEMO_MIN_DURACION_MS"), 200)

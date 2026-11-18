@@ -105,20 +105,36 @@
       </div>
     </section>
 
-    <!-- Banner de sesión activa para prueba temporal de invitado -->
-    <div id="banner-prueba-invitado" class="guest-trial-bar" role="alert" hidden>
+    <!-- Barra de Modo Invitado (visible cuando la sesión es de Invitado sin prueba activa) -->
+    <div id="barra-modo-invitado" class="guest-mode-bar view-control">
+      <div class="guest-mode-info">
+        <span class="badge guest-pill-badge"><i class="bi bi-eye-fill me-1"></i> MODO INVITADO</span>
+      </div>
+      <div class="guest-mode-actions">
+        <button id="btn-toggle-catalogo-invitado" type="button" class="btn btn-sm guest-cat-btn">
+          <i class="bi bi-grid-1x2" aria-hidden="true"></i> <span>Catálogo</span>
+        </button>
+        <button id="btn-barra-iniciar-prueba" type="button" class="btn btn-sm guest-start-btn">
+          <i class="bi bi-stopwatch" aria-hidden="true"></i> <span>Probar 10 min</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Banner de sesión activa para prueba temporal de invitado (con reloj 10:00) -->
+    <div id="banner-prueba-invitado" class="guest-trial-bar d-none" role="alert">
       <div class="guest-trial-info">
         <span class="demo-live-dot" aria-hidden="true"></span>
-        <span class="guest-trial-label">Prueba: <strong id="texto-alias-invitado-activo">Invitado</strong></span>
-        <span class="badge bg-dark text-warning font-monospace" id="reloj-prueba-invitado">03:00</span>
+        <span class="badge bg-dark text-warning border border-warning">EXHIBICIÓN EN VIVO</span>
+        <span class="guest-trial-label">Invitado: <strong id="texto-alias-invitado-activo">Visitante</strong></span>
+        <span class="badge bg-black text-warning font-monospace border border-secondary" id="reloj-prueba-invitado">10:00</span>
       </div>
       <button id="btn-cancelar-prueba-invitado" type="button" class="btn btn-sm btn-danger fw-bold guest-exit-btn">
-        <i class="bi bi-octagon-fill" aria-hidden="true"></i> <span>Salir y Detener</span>
+        <i class="bi bi-octagon-fill" aria-hidden="true"></i> <span>Finalizar</span>
       </button>
     </div>
 
     <!-- Barra compacta de selector de unidad asignada y acceso al Editor de Demos -->
-    <div id="seccion-mis-vehiculos" class="role-bar view-control">
+    <div id="seccion-mis-vehiculos" class="role-bar view-control d-none">
       <div class="role-bar-unit">
         <i class="bi bi-truck text-warning" aria-hidden="true"></i>
         <label for="select-mis-vehiculos" class="role-bar-label">Unidad:</label>
@@ -224,8 +240,8 @@
       </div>
     </section>
 
-    <!-- Catálogo Público de Exhibición para Invitados (aparece cuando rol es invitado sin prueba activa) -->
-    <section id="seccion-catalogo-invitado" class="guest-catalog-plate view-control" aria-label="Catálogo público" hidden>
+    <!-- Catálogo Público de Exhibición para Invitados (desplegable en modo invitado) -->
+    <section id="seccion-catalogo-invitado" class="guest-catalog-plate view-control d-none" aria-label="Catálogo público">
       <div class="guest-catalog-head">
         <span class="guest-catalog-title"><i class="bi bi-grid-1x2" aria-hidden="true"></i> Prueba nuestros vehículos IoT</span>
         <span class="badge retro-badge-gold">Exhibición Pública</span>
@@ -233,7 +249,7 @@
       <div class="row g-2 align-items-center mb-3">
         <div class="col-12 col-md-7">
           <p class="small text-secondary mb-0">
-            Explora nuestra línea comercial. Solicita una sesión temporal gratuita (3 minutos) con reserva exclusiva sobre unidades de exhibición.
+            Explora nuestra línea comercial. Solicita una sesión temporal gratuita (10 minutos) con reserva exclusiva sobre unidades de exhibición.
           </p>
         </div>
         <div class="col-12 col-md-5">
@@ -259,7 +275,7 @@
               </ul>
             </div>
             <button id="btn-iniciar-prueba-invitado" type="button" class="btn btn-sm btn-warning text-dark fw-bold w-100">
-              <i class="bi bi-play-fill" aria-hidden="true"></i> Probar Unidad (3 min)
+              <i class="bi bi-play-fill" aria-hidden="true"></i> Probar Unidad (10 min)
             </button>
           </div>
         </div>
@@ -363,47 +379,47 @@
           <span class="admin-top-title"><i class="bi bi-sliders2 me-1"></i> Consola de Administración de Flota IoT</span>
           <span id="admin-api-sync-badge" class="badge bg-secondary">Sincronizando...</span>
         </div>
-        <div class="row g-2 mb-3">
-          <div class="col-6 col-sm-4 col-lg-2">
+        <div class="row g-1 g-sm-2 mb-2 admin-kpi-row">
+          <div class="col-4 col-sm-4 col-lg-2">
             <div class="admin-kpi-card">
               <span class="admin-kpi-label"><i class="bi bi-boxes"></i> Modelos</span>
               <strong id="kpi-modelos" class="admin-kpi-val">0</strong>
             </div>
           </div>
-          <div class="col-6 col-sm-4 col-lg-2">
+          <div class="col-4 col-sm-4 col-lg-2">
             <div class="admin-kpi-card">
-              <span class="admin-kpi-label"><i class="bi bi-cpu"></i> Unidades Flota</span>
+              <span class="admin-kpi-label"><i class="bi bi-cpu"></i> Unidades</span>
               <strong id="kpi-unidades" class="admin-kpi-val">0</strong>
             </div>
           </div>
-          <div class="col-6 col-sm-4 col-lg-2">
+          <div class="col-4 col-sm-4 col-lg-2">
             <div class="admin-kpi-card">
               <span class="admin-kpi-label"><i class="bi bi-bag-check"></i> Vendidas</span>
               <strong id="kpi-vendidas" class="admin-kpi-val">0</strong>
             </div>
           </div>
-          <div class="col-6 col-sm-4 col-lg-2">
+          <div class="col-4 col-sm-4 col-lg-2">
             <div class="admin-kpi-card">
               <span class="admin-kpi-label"><i class="bi bi-display"></i> Exhibición</span>
               <strong id="kpi-exhibicion" class="admin-kpi-val">0</strong>
             </div>
           </div>
-          <div class="col-6 col-sm-4 col-lg-2">
+          <div class="col-4 col-sm-4 col-lg-2">
             <div class="admin-kpi-card">
               <span class="admin-kpi-label"><i class="bi bi-people"></i> Usuarios</span>
               <strong id="kpi-clientes" class="admin-kpi-val">0</strong>
             </div>
           </div>
-          <div class="col-6 col-sm-4 col-lg-2">
+          <div class="col-4 col-sm-4 col-lg-2">
             <div class="admin-kpi-card">
-              <span class="admin-kpi-label"><i class="bi bi-play-btn"></i> Demos Fábrica</span>
+              <span class="admin-kpi-label"><i class="bi bi-play-btn"></i> Demos</span>
               <strong id="kpi-demos" class="admin-kpi-val">0</strong>
             </div>
           </div>
         </div>
 
         <!-- Sub-navegación interna adaptativa de Administración -->
-        <div class="admin-subnav mb-3" role="tablist" aria-label="Subsecciones de administración">
+        <div class="admin-subnav mb-2" role="tablist" aria-label="Subsecciones de administración">
           <button type="button" class="btn admin-subtab active" data-admin-tab="inventario">
             <i class="bi bi-box-seam" aria-hidden="true"></i>
             <span class="d-sm-none">Flota</span>
@@ -426,190 +442,202 @@
           </button>
         </div>
 
-        <!-- Subpanel 1: Inventario y Modelos -->
+        <!-- Subpanel 1: Inventario y Modelos (En 2 columnas en escritorio para evitar scroll vertical excesivo) -->
         <div id="admin-panel-inventario" class="admin-subpanel">
-          <div class="admin-plate mb-3">
-            <div class="admin-plate-head">
-              <span class="admin-plate-title"><i class="bi bi-boxes"></i> Catálogo de Modelos Comerciales</span>
-              <button type="button" class="btn btn-sm btn-outline-warning" data-bs-toggle="collapse" data-bs-target="#collapse-crear-modelo">
-                <i class="bi bi-plus-lg"></i> Nuevo Modelo
-              </button>
+          <div class="row g-2 align-items-start">
+            <div class="col-12 col-xl-5">
+              <div class="admin-plate h-100">
+                <div class="admin-plate-head">
+                  <span class="admin-plate-title"><i class="bi bi-boxes"></i> Catálogo de Modelos Comerciales</span>
+                  <button type="button" class="btn btn-sm btn-outline-warning" data-bs-toggle="collapse" data-bs-target="#collapse-crear-modelo">
+                    <i class="bi bi-plus-lg"></i> Nuevo Modelo
+                  </button>
+                </div>
+                <div id="collapse-crear-modelo" class="collapse mb-2 admin-form-box">
+                  <form id="form-crear-modelo" class="row g-2">
+                    <div class="col-12 col-md-5">
+                      <input id="input-modelo-nombre" type="text" class="form-control form-control-sm bg-dark text-light border-secondary" placeholder="Nombre comercial del modelo" required>
+                    </div>
+                    <div class="col-12 col-sm-6 col-md-3">
+                      <select id="input-modelo-mcu" class="form-select form-select-sm bg-dark text-light border-secondary">
+                        <option value="ESP8266">ESP8266</option>
+                        <option value="ESP32">ESP32</option>
+                      </select>
+                    </div>
+                    <div class="col-12 col-sm-6 col-md-4">
+                      <input id="input-modelo-desc" type="text" class="form-control form-control-sm bg-dark text-light border-secondary" placeholder="Descripción (opcional)">
+                    </div>
+                    <div class="col-12 d-grid d-md-flex justify-content-md-end">
+                      <button type="submit" class="btn btn-sm btn-warning text-dark fw-bold"><i class="bi bi-check2"></i> Guardar Modelo</button>
+                    </div>
+                  </form>
+                </div>
+                <div class="table-responsive admin-table-wrap">
+                  <table class="table table-dark table-sm align-middle mb-0">
+                    <thead>
+                      <tr>
+                        <th>ID</th>
+                        <th>Modelo Comercial</th>
+                        <th>MCU</th>
+                        <th class="d-none d-md-table-cell">Descripción</th>
+                        <th>Estado</th>
+                        <th class="text-end">Acciones</th>
+                      </tr>
+                    </thead>
+                    <tbody id="tabla-modelos-body">
+                      <tr><td colspan="6" class="text-center text-secondary py-2">Cargando modelos...</td></tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
             </div>
-            <div id="collapse-crear-modelo" class="collapse mb-3 admin-form-box">
-              <form id="form-crear-modelo" class="row g-2">
-                <div class="col-12 col-md-4">
-                  <input id="input-modelo-nombre" type="text" class="form-control form-control-sm bg-dark text-light border-secondary" placeholder="Nombre comercial del modelo" required>
-                </div>
-                <div class="col-12 col-sm-6 col-md-3">
-                  <select id="input-modelo-mcu" class="form-select form-select-sm bg-dark text-light border-secondary">
-                    <option value="ESP8266">ESP8266</option>
-                    <option value="ESP32">ESP32</option>
-                  </select>
-                </div>
-                <div class="col-12 col-sm-6 col-md-5">
-                  <input id="input-modelo-desc" type="text" class="form-control form-control-sm bg-dark text-light border-secondary" placeholder="Descripción breve (opcional)">
-                </div>
-                <div class="col-12 d-grid d-md-flex justify-content-md-end">
-                  <button type="submit" class="btn btn-sm btn-warning text-dark fw-bold"><i class="bi bi-check2"></i> Guardar Modelo</button>
-                </div>
-              </form>
-            </div>
-            <div class="table-responsive admin-table-wrap">
-              <table class="table table-dark table-sm align-middle mb-0">
-                <thead>
-                  <tr>
-                    <th>ID</th>
-                    <th>Modelo Comercial</th>
-                    <th>MCU</th>
-                    <th class="d-none d-md-table-cell">Descripción</th>
-                    <th>Estado</th>
-                    <th class="text-end">Acciones</th>
-                  </tr>
-                </thead>
-                <tbody id="tabla-modelos-body">
-                  <tr><td colspan="6" class="text-center text-secondary py-3">Cargando modelos...</td></tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
 
-          <div class="admin-plate">
-            <div class="admin-plate-head">
-              <span class="admin-plate-title"><i class="bi bi-cpu"></i> Unidades Físicas (Flota)</span>
-              <button type="button" class="btn btn-sm btn-outline-warning" data-bs-toggle="collapse" data-bs-target="#collapse-crear-unidad">
-                <i class="bi bi-plus-lg"></i> Alta Unidad
-              </button>
-            </div>
-            <div id="collapse-crear-unidad" class="collapse mb-3 admin-form-box">
-              <form id="form-crear-unidad" class="row g-2">
-                <div class="col-12 col-md-3">
-                  <input id="input-unidad-nombre" type="text" class="form-control form-control-sm bg-dark text-light border-secondary" placeholder="Nombre de unidad" required value="Excavator 3000 #02">
+            <div class="col-12 col-xl-7">
+              <div class="admin-plate h-100">
+                <div class="admin-plate-head">
+                  <span class="admin-plate-title"><i class="bi bi-cpu"></i> Unidades Físicas (Flota)</span>
+                  <button type="button" class="btn btn-sm btn-outline-warning" data-bs-toggle="collapse" data-bs-target="#collapse-crear-unidad">
+                    <i class="bi bi-plus-lg"></i> Alta Unidad
+                  </button>
                 </div>
-                <div class="col-12 col-sm-6 col-md-3">
-                  <input id="input-unidad-serie" type="text" class="form-control form-control-sm bg-dark text-light border-secondary font-monospace" placeholder="Número de serie" required value="SN-EXCAV-003">
+                <div id="collapse-crear-unidad" class="collapse mb-2 admin-form-box">
+                  <form id="form-crear-unidad" class="row g-2">
+                    <div class="col-12 col-md-3">
+                      <input id="input-unidad-nombre" type="text" class="form-control form-control-sm bg-dark text-light border-secondary" placeholder="Nombre de unidad" required value="Excavator 3000 #02">
+                    </div>
+                    <div class="col-12 col-sm-6 col-md-3">
+                      <input id="input-unidad-serie" type="text" class="form-control form-control-sm bg-dark text-light border-secondary font-monospace" placeholder="Número de serie" required value="SN-EXCAV-003">
+                    </div>
+                    <div class="col-12 col-sm-6 col-md-2">
+                      <select id="select-unidad-modelo" class="form-select form-select-sm bg-dark text-light border-secondary">
+                        <option value="1">Excavator 3000</option>
+                      </select>
+                    </div>
+                    <div class="col-7 col-md-2">
+                      <select id="select-unidad-estado" class="form-select form-select-sm bg-dark text-light border-secondary">
+                        <option value="disponible">Disponible</option>
+                        <option value="exhibicion">Exhibición</option>
+                        <option value="mantenimiento">Mantenimiento</option>
+                      </select>
+                    </div>
+                    <div class="col-5 col-md-2 d-grid">
+                      <button type="submit" class="btn btn-sm btn-warning text-dark fw-bold"><i class="bi bi-check2"></i> Crear</button>
+                    </div>
+                  </form>
                 </div>
-                <div class="col-12 col-sm-6 col-md-2">
-                  <select id="select-unidad-modelo" class="form-select form-select-sm bg-dark text-light border-secondary">
-                    <option value="1">Excavator 3000</option>
-                  </select>
+                <div class="row g-2 mb-2">
+                  <div class="col-12 col-sm-7">
+                    <input id="filter-unidades-q" type="search" class="form-control form-control-sm bg-dark text-light border-secondary" placeholder="Buscar por nombre o número de serie...">
+                  </div>
+                  <div class="col-12 col-sm-5">
+                    <select id="filter-unidades-estado" class="form-select form-select-sm bg-dark text-light border-secondary">
+                      <option value="">Todos los estados</option>
+                      <option value="disponible">Disponible</option>
+                      <option value="vendido">Vendido</option>
+                      <option value="exhibicion">Exhibición</option>
+                      <option value="mantenimiento">Mantenimiento</option>
+                      <option value="inactivo">Inactivo</option>
+                    </select>
+                  </div>
                 </div>
-                <div class="col-7 col-md-2">
-                  <select id="select-unidad-estado" class="form-select form-select-sm bg-dark text-light border-secondary">
-                    <option value="disponible">Disponible</option>
-                    <option value="exhibicion">Exhibición</option>
-                    <option value="mantenimiento">Mantenimiento</option>
-                  </select>
+                <div class="table-responsive admin-table-wrap">
+                  <table class="table table-dark table-sm align-middle mb-0">
+                    <thead>
+                      <tr>
+                        <th>ID</th>
+                        <th>Unidad</th>
+                        <th>N° Serie</th>
+                        <th class="d-none d-sm-table-cell">Modelo</th>
+                        <th>Estado</th>
+                        <th>Propietario / Soporte</th>
+                        <th class="text-end">Acciones</th>
+                      </tr>
+                    </thead>
+                    <tbody id="tabla-unidades-body">
+                      <tr><td colspan="7" class="text-center text-secondary py-2">Cargando unidades...</td></tr>
+                    </tbody>
+                  </table>
                 </div>
-                <div class="col-5 col-md-2 d-grid">
-                  <button type="submit" class="btn btn-sm btn-warning text-dark fw-bold"><i class="bi bi-check2"></i> Crear</button>
-                </div>
-              </form>
-            </div>
-            <div class="row g-2 mb-2">
-              <div class="col-12 col-sm-7">
-                <input id="filter-unidades-q" type="search" class="form-control form-control-sm bg-dark text-light border-secondary" placeholder="Buscar por nombre o número de serie...">
               </div>
-              <div class="col-12 col-sm-5">
-                <select id="filter-unidades-estado" class="form-select form-select-sm bg-dark text-light border-secondary">
-                  <option value="">Todos los estados</option>
-                  <option value="disponible">Disponible</option>
-                  <option value="vendido">Vendido</option>
-                  <option value="exhibicion">Exhibición</option>
-                  <option value="mantenimiento">Mantenimiento</option>
-                  <option value="inactivo">Inactivo</option>
-                </select>
-              </div>
-            </div>
-            <div class="table-responsive admin-table-wrap">
-              <table class="table table-dark table-sm align-middle mb-0">
-                <thead>
-                  <tr>
-                    <th>ID</th>
-                    <th>Unidad</th>
-                    <th>N° Serie</th>
-                    <th class="d-none d-sm-table-cell">Modelo</th>
-                    <th>Estado</th>
-                    <th>Propietario / Soporte</th>
-                    <th class="text-end">Acciones</th>
-                  </tr>
-                </thead>
-                <tbody id="tabla-unidades-body">
-                  <tr><td colspan="7" class="text-center text-secondary py-3">Cargando unidades...</td></tr>
-                </tbody>
-              </table>
             </div>
           </div>
         </div>
 
         <!-- Subpanel 2: Clientes y Asignaciones -->
         <div id="admin-panel-clientes" class="admin-subpanel d-none">
-          <div class="admin-plate mb-3">
-            <div class="admin-plate-head">
-              <span class="admin-plate-title"><i class="bi bi-person-plus"></i> Gestión de Usuarios y Clientes (RBAC)</span>
-              <button type="button" class="btn btn-sm btn-outline-warning" data-bs-toggle="collapse" data-bs-target="#collapse-crear-cliente">
-                <i class="bi bi-plus-lg"></i> Nuevo Usuario
-              </button>
+          <div class="row g-2 align-items-start">
+            <div class="col-12 col-xl-8">
+              <div class="admin-plate h-100">
+                <div class="admin-plate-head">
+                  <span class="admin-plate-title"><i class="bi bi-person-plus"></i> Gestión de Usuarios y Clientes (RBAC)</span>
+                  <button type="button" class="btn btn-sm btn-outline-warning" data-bs-toggle="collapse" data-bs-target="#collapse-crear-cliente">
+                    <i class="bi bi-plus-lg"></i> Nuevo Usuario
+                  </button>
+                </div>
+                <div id="collapse-crear-cliente" class="collapse mb-2 admin-form-box">
+                  <form id="form-crear-cliente" class="row g-2">
+                    <div class="col-12 col-md-3">
+                      <input id="input-cliente-nombre" type="text" class="form-control form-control-sm bg-dark text-light border-secondary" placeholder="Nombre completo" required>
+                    </div>
+                    <div class="col-12 col-sm-6 col-md-3">
+                      <input id="input-cliente-email" type="email" class="form-control form-control-sm bg-dark text-light border-secondary" placeholder="usuario@dominio.com" required>
+                    </div>
+                    <div class="col-12 col-sm-6 col-md-2">
+                      <select id="select-cliente-rol" class="form-select form-select-sm bg-dark text-light border-secondary" aria-label="Rol del usuario">
+                        <option value="usuario" selected>Rol: Comprador</option>
+                        <option value="admin">Rol: Administrador</option>
+                        <option value="invitado">Rol: Invitado</option>
+                      </select>
+                    </div>
+                    <div class="col-12 col-sm-8 col-md-2">
+                      <input id="input-cliente-password" type="password" minlength="8" class="form-control form-control-sm bg-dark text-light border-secondary" placeholder="Contraseña (mín. 8)" required>
+                    </div>
+                    <div class="col-12 col-sm-4 col-md-2">
+                      <button type="submit" class="btn btn-sm btn-warning text-dark fw-bold w-100"><i class="bi bi-check2"></i> Registrar</button>
+                    </div>
+                  </form>
+                </div>
+                <div class="table-responsive admin-table-wrap">
+                  <table class="table table-dark table-sm align-middle mb-0">
+                    <thead>
+                      <tr>
+                        <th>ID</th>
+                        <th>Nombre</th>
+                        <th>Usuario / Correo</th>
+                        <th>Rol</th>
+                        <th>Estado</th>
+                        <th class="text-end">Acciones</th>
+                      </tr>
+                    </thead>
+                    <tbody id="tabla-clientes-body">
+                      <tr><td colspan="6" class="text-center text-secondary py-2">Cargando usuarios...</td></tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
             </div>
-            <div id="collapse-crear-cliente" class="collapse mb-3 admin-form-box">
-              <form id="form-crear-cliente" class="row g-2">
-                <div class="col-12 col-md-3">
-                  <input id="input-cliente-nombre" type="text" class="form-control form-control-sm bg-dark text-light border-secondary" placeholder="Nombre completo" required>
-                </div>
-                <div class="col-12 col-sm-6 col-md-3">
-                  <input id="input-cliente-email" type="email" class="form-control form-control-sm bg-dark text-light border-secondary" placeholder="usuario@dominio.com" required>
-                </div>
-                <div class="col-12 col-sm-6 col-md-2">
-                  <select id="select-cliente-rol" class="form-select form-select-sm bg-dark text-light border-secondary" aria-label="Rol del usuario">
-                    <option value="usuario" selected>Rol: Comprador</option>
-                    <option value="admin">Rol: Administrador</option>
-                    <option value="invitado">Rol: Invitado</option>
-                  </select>
-                </div>
-                <div class="col-12 col-sm-8 col-md-2">
-                  <input id="input-cliente-password" type="password" minlength="8" class="form-control form-control-sm bg-dark text-light border-secondary" placeholder="Contraseña (mín. 8)" required>
-                </div>
-                <div class="col-12 col-sm-4 col-md-2">
-                  <button type="submit" class="btn btn-sm btn-warning text-dark fw-bold w-100"><i class="bi bi-check2"></i> Registrar</button>
-                </div>
-              </form>
-            </div>
-            <div class="table-responsive admin-table-wrap">
-              <table class="table table-dark table-sm align-middle mb-0">
-                <thead>
-                  <tr>
-                    <th>ID</th>
-                    <th>Nombre</th>
-                    <th>Usuario / Correo</th>
-                    <th>Rol</th>
-                    <th>Estado</th>
-                    <th class="text-end">Acciones</th>
-                  </tr>
-                </thead>
-                <tbody id="tabla-clientes-body">
-                  <tr><td colspan="6" class="text-center text-secondary py-3">Cargando usuarios...</td></tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
 
-          <div class="admin-plate">
-            <div class="admin-plate-head">
-              <span class="admin-plate-title"><i class="bi bi-key"></i> Asignar Unidad a Comprador</span>
+            <div class="col-12 col-xl-4">
+              <div class="admin-plate h-100">
+                <div class="admin-plate-head">
+                  <span class="admin-plate-title"><i class="bi bi-key"></i> Asignar Unidad a Comprador</span>
+                </div>
+                <form id="form-asignar-unidad" class="row g-2 align-items-end">
+                  <div class="col-12">
+                    <label for="select-asignar-vehiculo" class="form-label small text-light opacity-75 mb-1">Unidad Física:</label>
+                    <select id="select-asignar-vehiculo" class="form-select form-select-sm bg-dark text-light border-secondary"></select>
+                  </div>
+                  <div class="col-12">
+                    <label for="select-asignar-cliente" class="form-label small text-light opacity-75 mb-1">Comprador:</label>
+                    <select id="select-asignar-cliente" class="form-select form-select-sm bg-dark text-light border-secondary"></select>
+                  </div>
+                  <div class="col-12 d-flex gap-2 pt-1">
+                    <button type="submit" class="btn btn-sm btn-warning text-dark fw-bold flex-fill"><i class="bi bi-link-45deg"></i> Asignar</button>
+                    <button type="button" id="btn-revocar-asignacion" class="btn btn-sm btn-outline-danger"><i class="bi bi-x-circle"></i> Revocar</button>
+                  </div>
+                </form>
+              </div>
             </div>
-            <form id="form-asignar-unidad" class="row g-2 align-items-end">
-              <div class="col-12 col-md-5">
-                <label for="select-asignar-vehiculo" class="form-label small text-light opacity-75 mb-1">Unidad Física:</label>
-                <select id="select-asignar-vehiculo" class="form-select form-select-sm bg-dark text-light border-secondary"></select>
-              </div>
-              <div class="col-12 col-md-4">
-                <label for="select-asignar-cliente" class="form-label small text-light opacity-75 mb-1">Comprador:</label>
-                <select id="select-asignar-cliente" class="form-select form-select-sm bg-dark text-light border-secondary"></select>
-              </div>
-              <div class="col-12 col-md-3 d-flex gap-2">
-                <button type="submit" class="btn btn-sm btn-warning text-dark fw-bold flex-fill"><i class="bi bi-link-45deg"></i> Asignar</button>
-                <button type="button" id="btn-revocar-asignacion" class="btn btn-sm btn-outline-danger"><i class="bi bi-x-circle"></i> Revocar</button>
-              </div>
-            </form>
           </div>
         </div>
 

@@ -36,7 +36,7 @@ export class VirtualJoystick {
   }
 
   _on_pointer_down(e) {
-    if (this.active_pointer_id !== null) return;
+    if (this.active_pointer_id !== null || this.controller.bloqueado_por_invitado) return;
     e.preventDefault();
     this._ajustar_geometria();
     this.active_pointer_id = e.pointerId;
@@ -116,6 +116,7 @@ export class VirtualJoystick {
   }
 
   _on_key_down(e) {
+    if (this.controller.bloqueado_por_invitado) return;
     const mapa_teclas = {
       ArrowUp: { dir: "UP", x: 0, y: -50 },
       ArrowDown: { dir: "DOWN", x: 0, y: 50 },

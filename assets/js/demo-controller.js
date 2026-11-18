@@ -10,7 +10,7 @@ export class DemoController {
   }
 
   async iniciar_demo_seleccionada(id_demo) {
-    if (!id_demo || this.en_ejecucion) return;
+    if (!id_demo || this.en_ejecucion || this.cmd_controller?.bloqueado_por_invitado) return;
 
     const opcion = this.ui.select_demo?.selectedOptions?.[0]?.textContent || "Secuencia";
     this.nombre_demo_activa = opcion;

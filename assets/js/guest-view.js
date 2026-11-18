@@ -72,7 +72,7 @@ export class GuestViewController {
     this.on_prueba_cambio = callbacks.on_prueba_cambio || null;
 
     this.modelos = [];
-    this.duracion_prueba_minutos = 3;
+    this.duracion_prueba_minutos = 10;
     this.sesion_activa = false;
     this.id_sesion_activa = null;
     this.id_vehiculo_prueba = null;
@@ -82,6 +82,7 @@ export class GuestViewController {
     this.timer_interval = null;
     this.alias_invitado = "Cliente Visitante";
     this.modo_local_fallback = false;
+    this.mostrando_catalogo = false;
     this._finalizando = false;
   }
 
@@ -99,6 +100,14 @@ export class GuestViewController {
       this.solicitar_prueba(null, null);
     });
 
+    document.getElementById("btn-barra-iniciar-prueba")?.addEventListener("click", () => {
+      this.solicitar_prueba(null, null);
+    });
+
+    document.getElementById("btn-toggle-catalogo-invitado")?.addEventListener("click", () => {
+      this.alternar_catalogo();
+    });
+
     document.getElementById("btn-cancelar-prueba-invitado")?.addEventListener("click", () => {
       this.finalizar_prueba(true);
     });
@@ -107,10 +116,34 @@ export class GuestViewController {
       const rol = this.auth?.obtener_rol();
       if (rol === "invitado") {
         this.sincronizar_catalogo();
-      } else if (this.sesion_activa) {
-        this.limpiar_sesion_local();
+      } else {
+        this.alternar_catalogo(false);
+        if (this.sesion_activa) {
+          this.limpiar_sesion_local();
+        }
       }
     });
+  }
+
+  alternar_catalogo(forzar = null) {
+    if (this.auth?.obtener_rol() !== "invitado") {
+      this.mostrando_catalogo = false;
+    } else {
+      this.mostrando_catalogo = typeof forzar === "boolean" ? forzar : !this.mostrando_catalogo;
+    }
+
+    const sec_cat = document.getElementById("seccion-catalogo-invitado");
+    const btn_toggle = document.getElementById("btn-toggle-catalogo-invitado");
+    if (sec_cat) {
+      sec_cat.classList.toggle("d-none", !this.mostrando_catalogo);
+    }
+    document.body.classList.toggle("guest-browsing", this.mostrando_catalogo);
+
+    if (btn_toggle) {
+      btn_toggle.innerHTML = this.mostrando_catalogo
+        ? '<i class="bi bi-controller" aria-hidden="true"></i> <span>Volver al Control</span>'
+        : '<i class="bi bi-grid-1x2" aria-hidden="true"></i> <span>Catálogo</span>';
+    }
   }
 
   async sincronizar_catalogo() {
@@ -118,9 +151,6 @@ export class GuestViewController {
       const resp = await this.api.get(config.endpoints.invitado_catalogo);
       if (Array.isArray(resp?.modelos) && resp.modelos.length > 0) {
         this.modelos = resp.modelos;
-        if (resp.duracion_prueba_minutos) {
-          this.duracion_prueba_minutos = Number(resp.duracion_prueba_minutos);
-        }
       } else {
         this.modelos = CATALOGO_RESPALDO_LOCAL;
       }
@@ -129,6 +159,7 @@ export class GuestViewController {
         this.modelos = CATALOGO_RESPALDO_LOCAL;
       }
     }
+    this.duracion_prueba_minutos = 10;
     this.renderizar_catalogo();
   }
 
@@ -274,12 +305,12 @@ export class GuestViewController {
 
       // Respaldo local únicamente si el servidor actual aún es versión 4.2 sin rutas /invitado/*
       this.modo_local_fallback = true;
-      const dur_seg = Number(this.duracion_prueba_minutos || 3) * 60;
+      const dur_seg = Number(this.duracion_prueba_minutos || 10) * 60;
       resp = {
         id_sesion: Date.now(),
         id_vehiculo: payload.id_vehiculo,
-        nombre_vehiculo: seleccionado?.nombre_unidad_exhibicion || "Excavadora de Exhibición",
-        nombre_comercial: seleccionado?.nombre_comercial || "Excavadora IoT",
+        nombre_vehiculo: seleccionado?.nombre_unidad_exhibicion || "Excavator 3000",
+        nombre_comercial: seleccionado?.nombre_comercial || "Excavator 3000",
         token_sesion: null,
         duracion_segundos: dur_seg,
         fecha_expiracion: new Date(Date.now() + dur_seg * 1000).toISOString(),
@@ -297,10 +328,13 @@ export class GuestViewController {
       ? resp.codigos_permitidos
       : [1, 2, 3, 4, 8, 9];
 
-    const exp_ms = resp.fecha_expiracion ? Date.parse(resp.fecha_expiracion) : NaN;
-    const dur_ms = Number(resp.duracion_segundos || this.duracion_prueba_minutos * 60) * 1000;
-    this.fecha_expiracion_ms = Number.isFinite(exp_ms) && exp_ms > Date.now() ? exp_ms : Date.now() + dur_ms;
+    const dur_ms = Number(this.duracion_prueba_minutos * 60) * 1000;
+    this.fecha_expiracion_ms = Date.now() + dur_ms;
     this.sesion_activa = true;
+
+    this.alternar_catalogo(false);
+    document.getElementById("barra-modo-invitado")?.classList.add("d-none");
+    document.body.classList.add("has-guest-trial");
 
     const banner = document.getElementById("banner-prueba-invitado");
     const texto_alias = document.getElementById("texto-alias-invitado-activo");
@@ -421,11 +455,20 @@ export class GuestViewController {
     this.segundos_restantes = 0;
     this.modo_local_fallback = false;
 
+    document.body.classList.remove("has-guest-trial");
+    this.alternar_catalogo(false);
+
     const banner = document.getElementById("banner-prueba-invitado");
     if (banner) banner.classList.add("d-none");
+
+    const barra_invitado = document.getElementById("barra-modo-invitado");
+    if (barra_invitado) {
+      barra_invitado.classList.toggle("d-none", this.auth?.obtener_rol() !== "invitado");
+    }
+
     const reloj = document.getElementById("reloj-prueba-invitado");
     if (reloj) {
-      reloj.textContent = "03:00";
+      reloj.textContent = "10:00";
       reloj.classList.remove("text-danger");
     }
   }

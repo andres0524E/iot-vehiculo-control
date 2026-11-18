@@ -45,8 +45,10 @@ export class UiManager {
     this.select_demo = document.getElementById("select-demo");
     this.btn_start_demo = document.getElementById("btn-start-demo");
     this.btn_cancel_demo = document.getElementById("btn-cancel-demo");
+    this.btn_emergency_stop = document.getElementById("btn-emergency-stop");
     this.demo_badge = document.getElementById("demo-status-badge");
     this.demo_progress = document.getElementById("demo-progress-text");
+    this.bloqueado_invitado = false;
 
     this.establecer_led(true);
     this.establecer_bocina(true);
@@ -56,7 +58,20 @@ export class UiManager {
   actualizar_datos_vehiculo(vehiculo) {
     if (!vehiculo) return;
     this.el_vehicle_name.textContent = normalizar_nombre_vehiculo(vehiculo.nombre || "Excavator 3000");
-    this.el_vehicle_meta.textContent = "Control remoto en tiempo real";
+    if (!this.el_vehicle_meta.dataset.customRoleMeta) {
+      this.el_vehicle_meta.textContent = "Control remoto en tiempo real";
+    }
+  }
+
+  establecer_subtitulo_rol(texto) {
+    if (!this.el_vehicle_meta) return;
+    if (texto) {
+      this.el_vehicle_meta.dataset.customRoleMeta = "1";
+      this.el_vehicle_meta.textContent = texto;
+    } else {
+      delete this.el_vehicle_meta.dataset.customRoleMeta;
+      this.el_vehicle_meta.textContent = "Control remoto en tiempo real";
+    }
   }
 
   actualizar_indicador_ws(estado, texto) {
@@ -264,10 +279,39 @@ export class UiManager {
   }
 
   habilitar_controles_manuales(habilitar) {
+    const permitir = Boolean(habilitar) && !this.bloqueado_invitado;
     const botones = this.commands_grid.querySelectorAll(".cmd-btn");
     botones.forEach((btn) => {
-      btn.disabled = !habilitar;
+      btn.disabled = !permitir;
     });
+    if (this.btn_emergency_stop) {
+      this.btn_emergency_stop.disabled = this.bloqueado_invitado;
+    }
+  }
+
+  establecer_bloqueo_invitado_ui(bloqueado) {
+    this.bloqueado_invitado = Boolean(bloqueado);
+    this.habilitar_controles_manuales(!this.bloqueado_invitado);
+    if (this.select_demo) {
+      this.select_demo.disabled = this.bloqueado_invitado;
+    }
+    if (this.btn_start_demo) {
+      this.btn_start_demo.disabled = this.bloqueado_invitado || !this.select_demo?.value;
+    }
+    if (this.panel_ctl) {
+      this.panel_ctl.classList.toggle("is-guest-locked", this.bloqueado_invitado);
+    }
+    if (this.panel_cat) {
+      this.panel_cat.classList.toggle("is-guest-locked", this.bloqueado_invitado);
+    }
+    if (this.panel_demo) {
+      this.panel_demo.classList.toggle("is-guest-locked", this.bloqueado_invitado);
+    }
+    if (this.bloqueado_invitado) {
+      this.mostrar_estado_accion("espera", "Inicia la prueba para activar los controles");
+    } else {
+      this.mostrar_estado_accion("espera", "Listo para enviar comandos");
+    }
   }
 
   renderizar_selector_demos(demos) {
@@ -290,7 +334,8 @@ export class UiManager {
       this.select_demo.appendChild(opt);
     });
 
-    this.btn_start_demo.disabled = false;
+    this.select_demo.disabled = this.bloqueado_invitado;
+    this.btn_start_demo.disabled = this.bloqueado_invitado;
   }
 
   actualizar_estado_demo_ui(en_ejecucion, texto_badge, detalle, nombre_banner = "") {

@@ -234,6 +234,8 @@ const admin_view = new AdminViewController(api, auth_session, {
   }
 });
 
+const CODIGOS_BASICOS_INVITADO = [1, 2, 3, 4, 7, 8, 9, 10, 11, 13, 14];
+
 const guest_view = new GuestViewController(api, auth_session, cmd_controller, ui, {
   on_prueba_cambio: async (info) => {
     if (info.activa) {
@@ -243,11 +245,14 @@ const guest_view = new GuestViewController(api, auth_session, cmd_controller, ui
         Number(info.id_vehiculo || 1),
         { alias: guest_view.alias_invitado, duracion_min: guest_view.duracion_prueba_minutos }
       );
-      cmd_controller.establecer_filtro_codigos(info.codigos_permitidos);
+      cmd_controller.establecer_bloqueo_invitado(false);
+      cmd_controller.establecer_filtro_codigos(info.codigos_permitidos || CODIGOS_BASICOS_INVITADO);
       await cambiar_vehiculo_activo(Number(info.id_vehiculo || 1), { forzar: true });
       navigation.cambiar_vista("control");
     } else {
-      cmd_controller.establecer_filtro_codigos(null);
+      const es_invitado = auth_session.obtener_rol() === "invitado";
+      cmd_controller.establecer_bloqueo_invitado(es_invitado);
+      cmd_controller.establecer_filtro_codigos(es_invitado ? CODIGOS_BASICOS_INVITADO : null);
       await cambiar_vehiculo_activo(Number(config.id_vehiculo || 1), { forzar: true });
     }
   }
@@ -323,6 +328,7 @@ function aplicar_rol_en_interfaz() {
       badge_rol.textContent = "ADMINISTRADOR";
       badge_rol.className = "badge retro-badge-gold";
     }
+    ui.establecer_subtitulo_rol("Sesión Administrador · Gestión Total de Flota");
   } else if (rol === "usuario") {
     if (icono_el) {
       icono_el.textContent = "";
@@ -333,30 +339,42 @@ function aplicar_rol_en_interfaz() {
       badge_rol.textContent = "COMPRADOR";
       badge_rol.className = "badge retro-badge-gold";
     }
+    ui.establecer_subtitulo_rol("Sesión Comprador · Control Privado");
   } else {
     if (icono_el) {
       icono_el.textContent = "";
-      icono_el.className = "bi bi-person";
+      icono_el.className = "bi bi-eye-fill";
     }
-    if (texto_el) texto_el.textContent = autenticado ? `Invitado · ${nombre_corto}` : "Iniciar Sesión";
+    if (texto_el) texto_el.textContent = autenticado ? `Invitado · ${nombre_corto}` : "Invitado · Iniciar Sesión";
     if (badge_rol) {
       badge_rol.textContent = "INVITADO";
       badge_rol.className = "badge bg-secondary";
     }
+    ui.establecer_subtitulo_rol("Modo Invitado · Demostración de Exhibición");
   }
 
   const sec_mis_vehiculos = document.getElementById("seccion-mis-vehiculos");
   const sec_catalogo_invitado = document.getElementById("seccion-catalogo-invitado");
+  const barra_modo_invitado = document.getElementById("barra-modo-invitado");
   const btn_editor = document.getElementById("btn-toggle-editor-demo");
 
   if (rol === "invitado") {
     sec_mis_vehiculos?.classList.add("d-none");
-    sec_catalogo_invitado?.classList.remove("d-none");
+    barra_modo_invitado?.classList.toggle("d-none", Boolean(guest_view.sesion_activa));
+    if (!guest_view.mostrando_catalogo) {
+      sec_catalogo_invitado?.classList.add("d-none");
+      document.body.classList.remove("guest-browsing");
+    }
     btn_editor?.classList.add("d-none");
+    cmd_controller.establecer_bloqueo_invitado(!guest_view.sesion_activa);
+    cmd_controller.establecer_filtro_codigos(guest_view.codigos_permitidos || CODIGOS_BASICOS_INVITADO);
   } else {
     sec_mis_vehiculos?.classList.remove("d-none");
+    barra_modo_invitado?.classList.add("d-none");
     sec_catalogo_invitado?.classList.add("d-none");
+    document.body.classList.remove("guest-browsing", "has-guest-trial");
     btn_editor?.classList.remove("d-none");
+    cmd_controller.establecer_bloqueo_invitado(false);
     cmd_controller.establecer_filtro_codigos(null);
   }
 
@@ -425,8 +443,8 @@ async function cargar_datos_iniciales() {
       ui.renderizar_selector_demos([]);
       if (rol === "invitado") {
         ui.mostrar_estado_accion(
-          "evento",
-          "Modo Invitado: inicia sesión o solicita una prueba de 3 min en el catálogo."
+          "espera",
+          "Inicia la prueba para activar los controles"
         );
       } else {
         ui.mostrar_estado_accion(
@@ -570,8 +588,8 @@ document.getElementById("form-login")?.addEventListener("submit", async (e) => {
       res.usuario?.rol === "admin"
         ? "Administrador"
         : res.usuario?.rol === "usuario"
-        ? "Comprador"
-        : "Invitado";
+          ? "Comprador"
+          : "Invitado";
     mostrar_notificacion(
       `Sesión iniciada: ${res.usuario?.nombre_completo} · Rol: ${rol_etiqueta}.`,
       "success"
