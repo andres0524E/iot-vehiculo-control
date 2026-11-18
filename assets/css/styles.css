@@ -1333,29 +1333,29 @@ body.app {
 /* ---------- horizontal: el control tumbado ---------- */
 @media (orientation: landscape) {
   :root {
-    --joy: clamp(96px, min(44dvh, 20vw), 230px);
+    --joy: clamp(92px, min(40dvh, 19vw), 220px);
   }
 
   .deck {
     grid-template-columns: minmax(0, 0.7fr) minmax(0, 1.1fr) minmax(0, 1.2fr);
     grid-template-rows: auto auto auto minmax(0, 1fr);
     grid-template-areas: "stat stat stat" "bar bar bar" "ctl lcd cat" "ctl demo cat";
-    padding: 10px 16px;
-    border-radius: 44px;
-    gap: 6px 12px;
+    padding: 8px 14px;
+    border-radius: 38px;
+    gap: 5px 10px;
   }
 
   .stat .status-card {
     padding: 3px 8px 3px 11px;
-    height: 2.5rem;
+    height: 2.3rem;
   }
 
   .stat .status-label {
-    font-size: 0.66rem;
+    font-size: 0.64rem;
   }
 
   .stat .status-value {
-    font-size: 0.78rem;
+    font-size: 0.76rem;
   }
 
   .stat .status-info {
@@ -1372,19 +1372,44 @@ body.app {
   .demo {
     display: flex;
     flex-direction: column;
+    justify-content: space-between;
     min-height: 0;
-    overflow: hidden;
+    padding: 6px 10px;
+  }
+
+  .demo-label {
+    display: none;
   }
 
   .demo-body {
     flex: 1;
     min-height: 0;
-    overflow-y: auto;
-    scrollbar-width: none;
+    justify-content: space-evenly;
+    gap: 4px;
   }
 
-  .demo-body::-webkit-scrollbar {
-    display: none;
+  .demo-body .form-select {
+    min-height: 36px;
+    padding-top: 4px;
+    padding-bottom: 4px;
+  }
+
+  .demo-actions .btn {
+    min-height: 52px;
+    gap: 12px;
+  }
+
+  .demo-actions .btn::after {
+    top: 6px;
+    width: 50px;
+    height: 22px;
+    margin-left: -25px;
+  }
+
+  .demo-actions .btn::before {
+    width: 40px;
+    height: 14px;
+    margin-top: 10px;
   }
 
   .app-title h1 {
@@ -1392,11 +1417,15 @@ body.app {
   }
 }
 
-/* celular acostado: todo más compacto para que quepa sin scroll */
-@media (orientation: landscape) and (max-height: 430px) {
+/* celular o ventana horizontal compacta: todo más compacto para que quepa sin scroll */
+@media (orientation: landscape) and (max-height: 540px) {
+  :root {
+    --joy: clamp(82px, min(33dvh, 17vw), 145px);
+  }
+
   body.app {
-    gap: 4px;
-    padding-top: max(4px, env(safe-area-inset-top));
+    gap: 3px;
+    padding-top: max(3px, env(safe-area-inset-top));
   }
 
   .app-title small {
@@ -1404,33 +1433,33 @@ body.app {
   }
 
   .nav-tab {
-    min-height: 36px;
-    padding: 3px 8px;
-    font-size: 0.72rem;
+    min-height: 32px;
+    padding: 2px 8px;
+    font-size: 0.7rem;
   }
 
   .user-session-dropdown .btn {
-    min-height: 36px;
-    padding: 3px 8px;
-    font-size: 0.74rem;
+    min-height: 32px;
+    padding: 2px 8px;
+    font-size: 0.72rem;
   }
 
   .refresh-btn {
-    min-width: 36px;
-    min-height: 36px;
+    min-width: 32px;
+    min-height: 32px;
   }
 
   .deck {
-    padding: 6px 12px;
-    border-radius: 28px;
-    gap: 4px 10px;
+    padding: 5px 10px;
+    border-radius: 24px;
+    gap: 3px 8px;
   }
 
   .role-bar,
   .guest-trial-bar,
   .guest-mode-bar {
-    padding: 3px 8px;
-    min-height: 32px;
+    padding: 2px 8px;
+    min-height: 28px;
     gap: 6px;
   }
 
@@ -1440,71 +1469,93 @@ body.app {
   }
 
   .role-bar-select {
-    min-height: 28px;
-    padding-top: 2px;
-    padding-bottom: 2px;
-    font-size: 0.72rem;
+    min-height: 24px;
+    padding-top: 1px;
+    padding-bottom: 1px;
+    font-size: 0.7rem;
   }
 
   .role-bar-editor-btn,
   .guest-exit-btn,
   .guest-cat-btn,
   .guest-start-btn {
-    min-height: 28px;
-    padding: 2px 8px;
-    font-size: 0.7rem;
+    min-height: 24px;
+    padding: 1px 8px;
+    font-size: 0.68rem;
   }
 
   .stat .status-card {
     height: auto;
-    min-height: 2.15rem;
-    padding: 2px 6px 2px 9px;
+    min-height: 1.85rem;
+    padding: 2px 6px 2px 8px;
   }
 
   .stat .status-info {
-    line-height: 1.05;
+    line-height: 1.02;
   }
 
   .stat .status-label {
-    font-size: 0.56rem;
+    font-size: 0.54rem;
   }
 
   .stat .status-value {
-    font-size: 0.64rem;
+    font-size: 0.62rem;
   }
 
   .lcd {
-    padding: 4px 8px;
+    padding: 3px 8px;
     height: auto;
-    min-height: 3.4rem;
+    min-height: 2.65rem;
   }
 
   .lcd-ws {
     -webkit-line-clamp: 1;
     line-clamp: 1;
+    font-size: 0.58rem;
   }
 
   .hw-pill {
-    padding: 2px 6px;
-    min-width: 60px;
-    gap: 4px;
+    padding: 2px 5px;
+    min-width: 54px;
+    gap: 3px;
   }
 
   .hw-label {
-    font-size: 0.56rem;
+    font-size: 0.54rem;
   }
 
   .refresh-text {
     display: none;
   }
 
+  .panel-head {
+    padding: 0 2px 2px;
+    font-size: 0.64rem;
+  }
+
   .ctl {
     min-height: 0;
   }
 
+  .ctl-body {
+    padding: 0 2px;
+  }
+
   .demo {
-    padding: 5px 10px;
+    padding: 4px 8px;
     min-height: 0;
+  }
+
+  .demo-body {
+    gap: 3px;
+    overflow: visible;
+  }
+
+  .demo-body .form-select {
+    min-height: 30px;
+    padding-top: 2px;
+    padding-bottom: 2px;
+    font-size: 0.76rem;
   }
 
   .demo-label {
@@ -1513,25 +1564,119 @@ body.app {
 
   .demo-live-banner {
     padding: 2px 6px;
-    font-size: 0.64rem;
+    font-size: 0.62rem;
   }
 
-  .demo-actions .btn {
-    min-height: 48px;
+  .demo-actions {
     gap: 8px;
   }
 
+  .demo-actions .btn {
+    min-height: 44px;
+    gap: 10px;
+    font-size: 0.62rem;
+    padding-bottom: 1px;
+  }
+
+  .demo-actions .btn::after {
+    top: 4px;
+    width: 44px;
+    height: 19px;
+    margin-left: -22px;
+  }
+
+  .demo-actions .btn::before {
+    width: 36px;
+    height: 12px;
+    margin-top: 8px;
+  }
+
+  .cat {
+    padding: 4px 4px 2px;
+    border-radius: 22px;
+  }
+
+  .cat .panel-head {
+    padding: 2px 10px 0;
+  }
+
+  .cat-scroll {
+    padding: 2px 6px 2px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+
+  #commands-grid {
+    gap: 2px 5px;
+  }
+
+  .cmd-btn {
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: center;
+    text-align: left;
+    gap: 4px;
+    min-height: 27px;
+    padding: 1px 2px;
+    font-size: 0.63rem;
+    line-height: 1.05;
+  }
+
+  .cmd-btn::after {
+    left: 1px;
+    top: 50%;
+    width: 26px;
+    height: 20px;
+    margin: -10px 0 0 0;
+  }
+
+  .cmd-btn::before {
+    width: 20px;
+    height: 14px;
+    margin: 0 3px;
+  }
+
+  @container (max-width: 460px) {
+    .cmd-btn {
+      flex-direction: row;
+      justify-content: flex-start;
+      align-items: center;
+      text-align: left;
+      gap: 4px;
+      min-height: 27px;
+      padding: 1px 2px;
+      font-size: 0.63rem;
+      line-height: 1.05;
+    }
+
+    .cmd-btn::after {
+      left: 1px;
+      top: 50%;
+      width: 26px;
+      height: 20px;
+      margin: -10px 0 0 0;
+    }
+
+    .cmd-btn::before {
+      width: 20px;
+      height: 14px;
+      margin: 0 3px;
+    }
+  }
+
   .cat-stop {
-    padding: 4px 12px 8px;
+    padding: 2px 10px 3px;
   }
 
   .stop-priority-btn {
-    height: 44px;
-    min-height: 44px;
+    height: 31px;
+    min-height: 31px;
+    font-size: 0.72rem;
   }
 
   .app-foot {
-    font-size: 0.58rem;
+    font-size: 0.56rem;
     line-height: 1;
   }
 }
