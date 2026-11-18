@@ -8,24 +8,25 @@
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="format-detection" content="telephone=no">
-  <title>Control y Monitoreo Vehículo IoT - AWS & RDS</title>
+  <title>Control, Monitoreo y Administración Vehículo IoT - AWS & RDS</title>
   <link rel="icon" type="image/svg+xml" href="./assets/img/favicon.svg">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
   <link rel="stylesheet" href="./assets/css/styles.css">
 </head>
-<body class="app" data-view="control">
+<body class="app" data-view="control" data-role="invitado">
 
   <header class="app-head">
     <div class="app-title">
       <i class="bi bi-controller" aria-hidden="true"></i>
       <div class="app-title-text">
-        <h1 id="vehicle-name">Cargando vehículo...</h1>
-        <small id="vehicle-meta">Control remoto</small>
+        <h1 id="vehicle-name">Excavator 3000</h1>
+        <small id="vehicle-meta">Control remoto en tiempo real</small>
       </div>
     </div>
 
-    <nav class="app-nav" aria-label="Navegación entre Control y Monitoreo">
+    <!-- Navegación Tri-Vista: Control, Monitoreo y Administración -->
+    <nav class="app-nav" aria-label="Navegación principal">
       <button id="tab-control" type="button" class="btn nav-tab active" aria-current="page" data-view-target="control">
         <i class="bi bi-joystick" aria-hidden="true"></i>
         <span>Control</span>
@@ -34,15 +35,52 @@
         <i class="bi bi-activity" aria-hidden="true"></i>
         <span>Monitoreo</span>
       </button>
+      <button id="tab-administracion" type="button" class="btn nav-tab" data-view-target="administracion">
+        <i class="bi bi-shield-lock" aria-hidden="true"></i>
+        <span class="tab-label-short" id="tab-admin-label-short">Admin</span>
+        <span class="tab-label-full" id="tab-admin-label-full">Administración</span>
+      </button>
     </nav>
 
-    <button id="btn-refresh-health" type="button" class="btn refresh-btn" aria-label="Comprobar estado de servicios">
-      <i class="bi bi-arrow-clockwise" aria-hidden="true"></i> <span class="refresh-text">Verificar red</span>
-    </button>
+    <!-- Selector de sesión/rol y verificación de red -->
+    <div class="head-actions">
+      <div class="dropdown user-session-dropdown">
+        <button id="btn-session-dropdown" class="btn dropdown-toggle font-monospace" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Cuenta de usuario y sesión">
+          <i id="session-role-icon" class="bi bi-person" aria-hidden="true"></i>
+          <span id="session-role-text">Invitado</span>
+        </button>
+        <ul class="dropdown-menu dropdown-menu-end dropdown-menu-dark p-2 shadow-lg" style="min-width: 265px;">
+          <li class="px-2 py-1">
+            <div class="d-flex justify-content-between align-items-center mb-1">
+              <span id="session-user-role-badge" class="badge bg-secondary">INVITADO</span>
+              <span id="session-mode-badge" class="badge bg-secondary">Público</span>
+            </div>
+            <div id="session-user-name" class="fw-bold text-light small text-truncate">Visitante (Acceso Público)</div>
+            <div id="session-user-email" class="small text-secondary font-monospace text-truncate">invitado@demo.com</div>
+          </li>
+          <li><hr class="dropdown-divider"></li>
+          <li>
+            <button type="button" id="btn-abrir-login" class="dropdown-item text-warning fw-bold rounded py-2">
+              <i class="bi bi-person-lock me-1"></i> Iniciar sesión / Cambiar usuario
+            </button>
+          </li>
+          <li>
+            <button type="button" id="btn-cerrar-sesion" class="dropdown-item text-danger rounded py-2 d-none">
+              <i class="bi bi-box-arrow-right me-1"></i> Cerrar sesión actual
+            </button>
+          </li>
+        </ul>
+      </div>
+
+      <button id="btn-refresh-health" type="button" class="btn refresh-btn" aria-label="Comprobar estado de servicios">
+        <i class="bi bi-arrow-clockwise" aria-hidden="true"></i>
+        <span class="refresh-text">Verificar red</span>
+      </button>
+    </div>
   </header>
 
   <main class="deck">
-    <!-- panel de 3 indicadores de conectividad compartidos por CONTROL y MONITOREO -->
+    <!-- Panel de 3 indicadores de conectividad compartidos -->
     <section aria-label="Estado de conectividad" class="stat">
       <div id="ind-ws" class="status-card status-warning" role="status" aria-live="polite">
         <i id="ind-ws-icon" class="bi bi-arrow-repeat status-icon" aria-hidden="true"></i>
@@ -67,8 +105,36 @@
       </div>
     </section>
 
+    <!-- Banner de sesión activa para prueba temporal de invitado -->
+    <div id="banner-prueba-invitado" class="guest-trial-bar" role="alert" hidden>
+      <div class="guest-trial-info">
+        <span class="demo-live-dot" aria-hidden="true"></span>
+        <span class="guest-trial-label">Prueba: <strong id="texto-alias-invitado-activo">Invitado</strong></span>
+        <span class="badge bg-dark text-warning font-monospace" id="reloj-prueba-invitado">03:00</span>
+      </div>
+      <button id="btn-cancelar-prueba-invitado" type="button" class="btn btn-sm btn-danger fw-bold guest-exit-btn">
+        <i class="bi bi-octagon-fill" aria-hidden="true"></i> <span>Salir y Detener</span>
+      </button>
+    </div>
+
+    <!-- Barra compacta de selector de unidad asignada y acceso al Editor de Demos -->
+    <div id="seccion-mis-vehiculos" class="role-bar view-control">
+      <div class="role-bar-unit">
+        <i class="bi bi-truck text-warning" aria-hidden="true"></i>
+        <label for="select-mis-vehiculos" class="role-bar-label">Unidad:</label>
+        <select id="select-mis-vehiculos" class="form-select form-select-sm role-bar-select">
+          <option value="1">Excavator 3000 (SN-EXCAV-001)</option>
+        </select>
+      </div>
+      <button id="btn-toggle-editor-demo" type="button" class="btn btn-sm role-bar-editor-btn">
+        <i class="bi bi-sliders" aria-hidden="true"></i>
+        <span class="d-none d-sm-inline">Editor de Demos</span>
+        <span class="d-sm-none">Demos</span>
+      </button>
+    </div>
+
     <!-- ================= VISTA CONTROL ================= -->
-    <!-- pantalla LCD de telemetria de control + indicadores visuales LED y bocina -->
+    <!-- Pantalla LCD de telemetria de control + indicadores visuales LED y bocina -->
     <section id="panel-control-lcd" aria-label="Retroalimentación de acción actual" class="lcd view-control">
       <div class="lcd-main">
         <div class="lcd-row">
@@ -93,10 +159,10 @@
       </div>
     </section>
 
-    <!-- joystick tactil y detener prioritario -->
+    <!-- Joystick táctil y detener prioritario -->
     <section id="panel-control-ctl" class="panel ctl view-control" aria-label="Control direccional">
       <div class="panel-head">
-        <span class="panel-title"><i class="bi bi-joystick text-info" aria-hidden="true"></i> Control direccional</span>
+        <span class="panel-title"><i class="bi bi-joystick" aria-hidden="true"></i> Control direccional</span>
         <span id="joystick-direction-label" class="badge text-bg-dark border border-secondary">Neutral</span>
       </div>
       <div class="ctl-body">
@@ -112,10 +178,10 @@
       </div>
     </section>
 
-    <!-- catalogo de movimientos exclusivos (sin demo_software) -->
+    <!-- Catálogo de movimientos exclusivos -->
     <section id="panel-control-cat" class="panel cat view-control" aria-label="Movimientos">
       <div class="panel-head">
-        <span class="panel-title"><i class="bi bi-grid-3x3-gap text-info" aria-hidden="true"></i> Movimientos</span>
+        <span class="panel-title"><i class="bi bi-grid-3x3-gap" aria-hidden="true"></i> Movimientos</span>
         <small id="catalog-count">0 comandos</small>
       </div>
       <div class="cat-scroll">
@@ -131,10 +197,10 @@
       </div>
     </section>
 
-    <!-- selector y ejecucion de demo -->
+    <!-- Selector y ejecución de demo -->
     <section id="panel-control-demo" class="panel demo view-control" aria-label="Secuencias demo">
       <div class="panel-head">
-        <span class="panel-title"><i class="bi bi-play-btn text-info" aria-hidden="true"></i> Secuencias demo</span>
+        <span class="panel-title"><i class="bi bi-play-btn" aria-hidden="true"></i> Secuencias demo</span>
         <span id="demo-status-badge" class="badge bg-secondary">Inactiva</span>
       </div>
       <div class="demo-body">
@@ -158,8 +224,62 @@
       </div>
     </section>
 
+    <!-- Catálogo Público de Exhibición para Invitados (aparece cuando rol es invitado sin prueba activa) -->
+    <section id="seccion-catalogo-invitado" class="guest-catalog-plate view-control" aria-label="Catálogo público" hidden>
+      <div class="guest-catalog-head">
+        <span class="guest-catalog-title"><i class="bi bi-grid-1x2" aria-hidden="true"></i> Prueba nuestros vehículos IoT</span>
+        <span class="badge retro-badge-gold">Exhibición Pública</span>
+      </div>
+      <div class="row g-2 align-items-center mb-3">
+        <div class="col-12 col-md-7">
+          <p class="small text-secondary mb-0">
+            Explora nuestra línea comercial. Solicita una sesión temporal gratuita (3 minutos) con reserva exclusiva sobre unidades de exhibición.
+          </p>
+        </div>
+        <div class="col-12 col-md-5">
+          <div class="input-group input-group-sm">
+            <span class="input-group-text bg-dark text-warning border-secondary"><i class="bi bi-person-vcard"></i></span>
+            <input id="input-alias-invitado" type="text" class="form-control bg-dark text-light border-secondary" placeholder="Tu Nombre o Empresa" value="Cliente Interesado" aria-label="Tu nombre o empresa">
+          </div>
+        </div>
+      </div>
+      <div id="guest-catalog-grid" class="row g-3">
+        <div class="col-12 col-md-6">
+          <div class="admin-subcard h-100 d-flex flex-column justify-content-between">
+            <div>
+              <img src="./assets/img/excavadora.svg" alt="Excavator 3000" class="guest-model-img mb-2">
+              <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
+                <h2 class="h6 text-warning mb-0 fw-bold">Excavator 3000</h2>
+                <span class="badge bg-success">Disponible</span>
+              </div>
+              <p class="small text-light opacity-75 mb-2">Chasis industrial con sistema de orugas, brazo articulado, bocina y LED frontal en tiempo real.</p>
+              <ul class="list-unstyled small text-secondary mb-3">
+                <li><i class="bi bi-cpu text-warning me-1"></i> NodeMCU ESP8266 · Comandos básicos habilitados</li>
+                <li><i class="bi bi-shield-check text-warning me-1"></i> Paro de seguridad automático al finalizar</li>
+              </ul>
+            </div>
+            <button id="btn-iniciar-prueba-invitado" type="button" class="btn btn-sm btn-warning text-dark fw-bold w-100">
+              <i class="bi bi-play-fill" aria-hidden="true"></i> Probar Unidad (3 min)
+            </button>
+          </div>
+        </div>
+        <div class="col-12 col-md-6">
+          <div class="admin-subcard h-100 d-flex flex-column justify-content-between opacity-75">
+            <div>
+              <img src="./assets/img/rover.svg" alt="Rover Explorador X1" class="guest-model-img mb-2">
+              <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
+                <h2 class="h6 text-warning mb-0 fw-bold">Rover Explorador X1</h2>
+                <span class="badge bg-secondary">Próximamente</span>
+              </div>
+              <p class="small text-light opacity-75 mb-2">Tracción diferencial 4x4 para terreno irregular con radar de proximidad ultrasónico.</p>
+            </div>
+            <button type="button" class="btn btn-sm btn-outline-secondary w-100" disabled>Sin unidad en exhibición</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <!-- ================= VISTA MONITOREO ================= -->
-    <!-- tarjeta destacada del ultimo movimiento reportado / demo en ejecucion -->
     <section id="panel-monitoreo-last" class="panel mon-last view-monitoreo" aria-label="Último movimiento reportado" hidden>
       <div class="panel-head">
         <span class="panel-title"><i class="bi bi-broadcast-pin" aria-hidden="true"></i> Último movimiento reportado</span>
@@ -196,7 +316,6 @@
       </div>
     </section>
 
-    <!-- tabla dinamica de los ultimos diez movimientos individuales persistidos -->
     <section id="panel-monitoreo-hist" class="panel cat mon-hist view-monitoreo" aria-label="Últimos diez movimientos persistidos" hidden>
       <div class="panel-head">
         <span class="panel-title"><i class="bi bi-clock-history text-info" aria-hidden="true"></i> Últimos 10 movimientos</span>
@@ -233,12 +352,506 @@
         </table>
       </div>
     </section>
+
+    <!-- ================= VISTA ADMINISTRACIÓN / MIS VEHÍCULOS ================= -->
+    <section id="panel-administracion" class="admin-workspace view-administracion" aria-label="Administración y Mi Garage" hidden>
+
+      <!-- MODO EMPRESA (Solo Rol ADMINISTRADOR) -->
+      <div id="admin-mode-empresa">
+        <!-- KPIs Dashboard + Estado de Sincronización -->
+        <div class="admin-top-bar mb-2">
+          <span class="admin-top-title"><i class="bi bi-sliders2 me-1"></i> Consola de Administración de Flota IoT</span>
+          <span id="admin-api-sync-badge" class="badge bg-secondary">Sincronizando...</span>
+        </div>
+        <div class="row g-2 mb-3">
+          <div class="col-6 col-sm-4 col-lg-2">
+            <div class="admin-kpi-card">
+              <span class="admin-kpi-label"><i class="bi bi-boxes"></i> Modelos</span>
+              <strong id="kpi-modelos" class="admin-kpi-val">0</strong>
+            </div>
+          </div>
+          <div class="col-6 col-sm-4 col-lg-2">
+            <div class="admin-kpi-card">
+              <span class="admin-kpi-label"><i class="bi bi-cpu"></i> Unidades Flota</span>
+              <strong id="kpi-unidades" class="admin-kpi-val">0</strong>
+            </div>
+          </div>
+          <div class="col-6 col-sm-4 col-lg-2">
+            <div class="admin-kpi-card">
+              <span class="admin-kpi-label"><i class="bi bi-bag-check"></i> Vendidas</span>
+              <strong id="kpi-vendidas" class="admin-kpi-val">0</strong>
+            </div>
+          </div>
+          <div class="col-6 col-sm-4 col-lg-2">
+            <div class="admin-kpi-card">
+              <span class="admin-kpi-label"><i class="bi bi-display"></i> Exhibición</span>
+              <strong id="kpi-exhibicion" class="admin-kpi-val">0</strong>
+            </div>
+          </div>
+          <div class="col-6 col-sm-4 col-lg-2">
+            <div class="admin-kpi-card">
+              <span class="admin-kpi-label"><i class="bi bi-people"></i> Usuarios</span>
+              <strong id="kpi-clientes" class="admin-kpi-val">0</strong>
+            </div>
+          </div>
+          <div class="col-6 col-sm-4 col-lg-2">
+            <div class="admin-kpi-card">
+              <span class="admin-kpi-label"><i class="bi bi-play-btn"></i> Demos Fábrica</span>
+              <strong id="kpi-demos" class="admin-kpi-val">0</strong>
+            </div>
+          </div>
+        </div>
+
+        <!-- Sub-navegación interna adaptativa de Administración -->
+        <div class="admin-subnav mb-3" role="tablist" aria-label="Subsecciones de administración">
+          <button type="button" class="btn admin-subtab active" data-admin-tab="inventario">
+            <i class="bi bi-box-seam" aria-hidden="true"></i>
+            <span class="d-sm-none">Flota</span>
+            <span class="d-none d-sm-inline">Inventario & Modelos</span>
+          </button>
+          <button type="button" class="btn admin-subtab" data-admin-tab="clientes">
+            <i class="bi bi-people" aria-hidden="true"></i>
+            <span class="d-sm-none">Clientes</span>
+            <span class="d-none d-sm-inline">Clientes & Asignaciones</span>
+          </button>
+          <button type="button" class="btn admin-subtab" data-admin-tab="demos">
+            <i class="bi bi-play-circle" aria-hidden="true"></i>
+            <span class="d-sm-none">Demos</span>
+            <span class="d-none d-sm-inline">Demos de Fábrica</span>
+          </button>
+          <button type="button" class="btn admin-subtab" data-admin-tab="auditoria">
+            <i class="bi bi-journal-text" aria-hidden="true"></i>
+            <span class="d-sm-none">Auditoría</span>
+            <span class="d-none d-sm-inline">Bitácora de Auditoría</span>
+          </button>
+        </div>
+
+        <!-- Subpanel 1: Inventario y Modelos -->
+        <div id="admin-panel-inventario" class="admin-subpanel">
+          <div class="admin-plate mb-3">
+            <div class="admin-plate-head">
+              <span class="admin-plate-title"><i class="bi bi-boxes"></i> Catálogo de Modelos Comerciales</span>
+              <button type="button" class="btn btn-sm btn-outline-warning" data-bs-toggle="collapse" data-bs-target="#collapse-crear-modelo">
+                <i class="bi bi-plus-lg"></i> Nuevo Modelo
+              </button>
+            </div>
+            <div id="collapse-crear-modelo" class="collapse mb-3 admin-form-box">
+              <form id="form-crear-modelo" class="row g-2">
+                <div class="col-12 col-md-4">
+                  <input id="input-modelo-nombre" type="text" class="form-control form-control-sm bg-dark text-light border-secondary" placeholder="Nombre comercial del modelo" required>
+                </div>
+                <div class="col-12 col-sm-6 col-md-3">
+                  <select id="input-modelo-mcu" class="form-select form-select-sm bg-dark text-light border-secondary">
+                    <option value="ESP8266">ESP8266</option>
+                    <option value="ESP32">ESP32</option>
+                  </select>
+                </div>
+                <div class="col-12 col-sm-6 col-md-5">
+                  <input id="input-modelo-desc" type="text" class="form-control form-control-sm bg-dark text-light border-secondary" placeholder="Descripción breve (opcional)">
+                </div>
+                <div class="col-12 d-grid d-md-flex justify-content-md-end">
+                  <button type="submit" class="btn btn-sm btn-warning text-dark fw-bold"><i class="bi bi-check2"></i> Guardar Modelo</button>
+                </div>
+              </form>
+            </div>
+            <div class="table-responsive admin-table-wrap">
+              <table class="table table-dark table-sm align-middle mb-0">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Modelo Comercial</th>
+                    <th>MCU</th>
+                    <th class="d-none d-md-table-cell">Descripción</th>
+                    <th>Estado</th>
+                    <th class="text-end">Acciones</th>
+                  </tr>
+                </thead>
+                <tbody id="tabla-modelos-body">
+                  <tr><td colspan="6" class="text-center text-secondary py-3">Cargando modelos...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="admin-plate">
+            <div class="admin-plate-head">
+              <span class="admin-plate-title"><i class="bi bi-cpu"></i> Unidades Físicas (Flota)</span>
+              <button type="button" class="btn btn-sm btn-outline-warning" data-bs-toggle="collapse" data-bs-target="#collapse-crear-unidad">
+                <i class="bi bi-plus-lg"></i> Alta Unidad
+              </button>
+            </div>
+            <div id="collapse-crear-unidad" class="collapse mb-3 admin-form-box">
+              <form id="form-crear-unidad" class="row g-2">
+                <div class="col-12 col-md-3">
+                  <input id="input-unidad-nombre" type="text" class="form-control form-control-sm bg-dark text-light border-secondary" placeholder="Nombre de unidad" required value="Excavator 3000 #02">
+                </div>
+                <div class="col-12 col-sm-6 col-md-3">
+                  <input id="input-unidad-serie" type="text" class="form-control form-control-sm bg-dark text-light border-secondary font-monospace" placeholder="Número de serie" required value="SN-EXCAV-003">
+                </div>
+                <div class="col-12 col-sm-6 col-md-2">
+                  <select id="select-unidad-modelo" class="form-select form-select-sm bg-dark text-light border-secondary">
+                    <option value="1">Excavator 3000</option>
+                  </select>
+                </div>
+                <div class="col-7 col-md-2">
+                  <select id="select-unidad-estado" class="form-select form-select-sm bg-dark text-light border-secondary">
+                    <option value="disponible">Disponible</option>
+                    <option value="exhibicion">Exhibición</option>
+                    <option value="mantenimiento">Mantenimiento</option>
+                  </select>
+                </div>
+                <div class="col-5 col-md-2 d-grid">
+                  <button type="submit" class="btn btn-sm btn-warning text-dark fw-bold"><i class="bi bi-check2"></i> Crear</button>
+                </div>
+              </form>
+            </div>
+            <div class="row g-2 mb-2">
+              <div class="col-12 col-sm-7">
+                <input id="filter-unidades-q" type="search" class="form-control form-control-sm bg-dark text-light border-secondary" placeholder="Buscar por nombre o número de serie...">
+              </div>
+              <div class="col-12 col-sm-5">
+                <select id="filter-unidades-estado" class="form-select form-select-sm bg-dark text-light border-secondary">
+                  <option value="">Todos los estados</option>
+                  <option value="disponible">Disponible</option>
+                  <option value="vendido">Vendido</option>
+                  <option value="exhibicion">Exhibición</option>
+                  <option value="mantenimiento">Mantenimiento</option>
+                  <option value="inactivo">Inactivo</option>
+                </select>
+              </div>
+            </div>
+            <div class="table-responsive admin-table-wrap">
+              <table class="table table-dark table-sm align-middle mb-0">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Unidad</th>
+                    <th>N° Serie</th>
+                    <th class="d-none d-sm-table-cell">Modelo</th>
+                    <th>Estado</th>
+                    <th>Propietario / Soporte</th>
+                    <th class="text-end">Acciones</th>
+                  </tr>
+                </thead>
+                <tbody id="tabla-unidades-body">
+                  <tr><td colspan="7" class="text-center text-secondary py-3">Cargando unidades...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Subpanel 2: Clientes y Asignaciones -->
+        <div id="admin-panel-clientes" class="admin-subpanel d-none">
+          <div class="admin-plate mb-3">
+            <div class="admin-plate-head">
+              <span class="admin-plate-title"><i class="bi bi-person-plus"></i> Gestión de Usuarios y Clientes (RBAC)</span>
+              <button type="button" class="btn btn-sm btn-outline-warning" data-bs-toggle="collapse" data-bs-target="#collapse-crear-cliente">
+                <i class="bi bi-plus-lg"></i> Nuevo Usuario
+              </button>
+            </div>
+            <div id="collapse-crear-cliente" class="collapse mb-3 admin-form-box">
+              <form id="form-crear-cliente" class="row g-2">
+                <div class="col-12 col-md-3">
+                  <input id="input-cliente-nombre" type="text" class="form-control form-control-sm bg-dark text-light border-secondary" placeholder="Nombre completo" required>
+                </div>
+                <div class="col-12 col-sm-6 col-md-3">
+                  <input id="input-cliente-email" type="email" class="form-control form-control-sm bg-dark text-light border-secondary" placeholder="usuario@dominio.com" required>
+                </div>
+                <div class="col-12 col-sm-6 col-md-2">
+                  <select id="select-cliente-rol" class="form-select form-select-sm bg-dark text-light border-secondary" aria-label="Rol del usuario">
+                    <option value="usuario" selected>Rol: Comprador</option>
+                    <option value="admin">Rol: Administrador</option>
+                    <option value="invitado">Rol: Invitado</option>
+                  </select>
+                </div>
+                <div class="col-12 col-sm-8 col-md-2">
+                  <input id="input-cliente-password" type="password" minlength="8" class="form-control form-control-sm bg-dark text-light border-secondary" placeholder="Contraseña (mín. 8)" required>
+                </div>
+                <div class="col-12 col-sm-4 col-md-2">
+                  <button type="submit" class="btn btn-sm btn-warning text-dark fw-bold w-100"><i class="bi bi-check2"></i> Registrar</button>
+                </div>
+              </form>
+            </div>
+            <div class="table-responsive admin-table-wrap">
+              <table class="table table-dark table-sm align-middle mb-0">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Nombre</th>
+                    <th>Usuario / Correo</th>
+                    <th>Rol</th>
+                    <th>Estado</th>
+                    <th class="text-end">Acciones</th>
+                  </tr>
+                </thead>
+                <tbody id="tabla-clientes-body">
+                  <tr><td colspan="6" class="text-center text-secondary py-3">Cargando usuarios...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="admin-plate">
+            <div class="admin-plate-head">
+              <span class="admin-plate-title"><i class="bi bi-key"></i> Asignar Unidad a Comprador</span>
+            </div>
+            <form id="form-asignar-unidad" class="row g-2 align-items-end">
+              <div class="col-12 col-md-5">
+                <label for="select-asignar-vehiculo" class="form-label small text-light opacity-75 mb-1">Unidad Física:</label>
+                <select id="select-asignar-vehiculo" class="form-select form-select-sm bg-dark text-light border-secondary"></select>
+              </div>
+              <div class="col-12 col-md-4">
+                <label for="select-asignar-cliente" class="form-label small text-light opacity-75 mb-1">Comprador:</label>
+                <select id="select-asignar-cliente" class="form-select form-select-sm bg-dark text-light border-secondary"></select>
+              </div>
+              <div class="col-12 col-md-3 d-flex gap-2">
+                <button type="submit" class="btn btn-sm btn-warning text-dark fw-bold flex-fill"><i class="bi bi-link-45deg"></i> Asignar</button>
+                <button type="button" id="btn-revocar-asignacion" class="btn btn-sm btn-outline-danger"><i class="bi bi-x-circle"></i> Revocar</button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <!-- Subpanel 3: Demos Oficiales de Fábrica -->
+        <div id="admin-panel-demos" class="admin-subpanel d-none">
+          <div class="admin-plate">
+            <div class="admin-plate-head">
+              <span class="admin-plate-title"><i class="bi bi-play-btn"></i> Rutinas Oficiales de Fábrica</span>
+              <button type="button" class="btn btn-sm btn-outline-warning" data-bs-toggle="collapse" data-bs-target="#collapse-crear-demo-fabrica">
+                <i class="bi bi-plus-lg"></i> Nueva Demo Fábrica
+              </button>
+            </div>
+            <div id="collapse-crear-demo-fabrica" class="collapse mb-3 admin-form-box">
+              <form id="form-crear-demo-fabrica" class="row g-2">
+                <div class="col-12 col-md-4">
+                  <label for="select-demo-fab-vehiculo" class="form-label small text-secondary mb-1">Unidad destino:</label>
+                  <select id="select-demo-fab-vehiculo" class="form-select form-select-sm bg-dark text-light border-secondary"></select>
+                </div>
+                <div class="col-12 col-md-4">
+                  <label for="input-demo-fab-nombre" class="form-label small text-secondary mb-1">Nombre demo:</label>
+                  <input id="input-demo-fab-nombre" type="text" class="form-control form-control-sm bg-dark text-light border-secondary" placeholder="Ej: Exhibición Autónoma" required>
+                </div>
+                <div class="col-12 col-md-4">
+                  <label for="input-demo-fab-desc" class="form-label small text-secondary mb-1">Descripción:</label>
+                  <input id="input-demo-fab-desc" type="text" class="form-control form-control-sm bg-dark text-light border-secondary" placeholder="Secuencia certificada de planta">
+                </div>
+                <div class="col-12">
+                  <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span class="small text-warning fw-bold">Pasos de fábrica:</span>
+                    <button id="btn-fab-agregar-paso" type="button" class="btn btn-sm btn-outline-warning"><i class="bi bi-plus-lg"></i> Paso</button>
+                  </div>
+                  <div id="lista-pasos-fabrica"></div>
+                </div>
+                <div class="col-12 d-grid d-md-flex justify-content-md-end">
+                  <button type="submit" class="btn btn-sm btn-warning text-dark fw-bold"><i class="bi bi-check2"></i> Publicar Demo de Fábrica</button>
+                </div>
+              </form>
+            </div>
+            <div class="table-responsive admin-table-wrap">
+              <table class="table table-dark table-sm align-middle mb-0">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Demo</th>
+                    <th>Unidad</th>
+                    <th>Pasos</th>
+                  </tr>
+                </thead>
+                <tbody id="tabla-demos-fabrica-body">
+                  <tr><td colspan="4" class="text-center text-secondary py-3">Cargando demos de fábrica...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Subpanel 4: Bitácora de Auditoría -->
+        <div id="admin-panel-auditoria" class="admin-subpanel d-none">
+          <div class="admin-plate">
+            <div class="admin-plate-head">
+              <span class="admin-plate-title"><i class="bi bi-journal-check"></i> Bitácora de Auditoría</span>
+              <input id="filter-auditoria-q" type="search" class="form-control form-control-sm bg-dark text-light border-secondary admin-audit-filter" placeholder="Filtrar acción o detalle...">
+            </div>
+            <div class="table-responsive admin-table-wrap">
+              <table class="table table-dark table-sm align-middle mb-0">
+                <thead>
+                  <tr>
+                    <th>Fecha/Hora</th>
+                    <th>Actor</th>
+                    <th>Acción</th>
+                    <th>Detalles</th>
+                  </tr>
+                </thead>
+                <tbody id="tabla-auditoria-body">
+                  <tr><td colspan="4" class="text-center text-secondary py-3">Cargando bitácora...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- MODO COMPRADOR (Rol USUARIO: Solo ve sus propias unidades, soporte y editor de demos) -->
+      <div id="admin-mode-comprador" hidden>
+        <div class="admin-plate mb-3">
+          <div class="admin-plate-head">
+            <span class="admin-plate-title"><i class="bi bi-truck-front"></i> Mis Vehículos Adquiridos</span>
+            <span class="badge retro-badge-gold">Cuenta Privada</span>
+          </div>
+          <p class="small text-light opacity-75 mb-3">
+            Aislamiento estricto activo (RBAC + BOLA): únicamente visualizas y operas tus unidades propias. El soporte técnico remoto por parte del Administrador permanece bloqueado hasta que tú lo autorices temporalmente.
+          </p>
+          <div id="comprador-lista-vehiculos" class="row g-2 mb-2">
+            <div class="col-12 text-secondary small">Cargando tus unidades asignadas...</div>
+          </div>
+        </div>
+
+        <div id="comprador-demos-card" class="admin-plate">
+          <div class="admin-plate-head">
+            <span class="admin-plate-title"><i class="bi bi-sliders"></i> Mis Rutinas Demo (Privadas y Fábrica)</span>
+            <button type="button" id="btn-comprador-abrir-editor" class="btn btn-sm btn-warning text-dark fw-bold">
+              <i class="bi bi-plus-lg"></i> Nueva Demo Privada
+            </button>
+          </div>
+          <div id="comprador-lista-demos" class="row g-2">
+            <div class="col-12 text-secondary small">Cargando rutinas de tu unidad...</div>
+          </div>
+        </div>
+      </div>
+
+    </section>
   </main>
 
   <footer class="app-foot">
     Desarrollado por Andrés Jeriel Cruz Reséndiz · 2026
   </footer>
 
+  <!-- Modal Responsivo Fullscreen-on-Mobile para el Editor Visual de Demos -->
+  <div class="modal fade retro-modal" id="modal-editor-demo" tabindex="-1" aria-labelledby="modalEditorDemoLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable modal-fullscreen-sm-down">
+      <div class="modal-content">
+        <div class="modal-header py-2">
+          <div class="d-flex align-items-center gap-2 flex-wrap">
+            <h2 class="modal-title h6 fw-bold mb-0" id="modalEditorDemoLabel">
+              <i class="bi bi-sliders me-1"></i> Editor Visual de Rutinas Demo
+            </h2>
+            <span id="badge-duracion-total-demo" class="badge retro-badge-dark font-monospace">0.0 s</span>
+          </div>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+        </div>
+        <div class="modal-body">
+          <form id="form-editor-demo">
+            <input id="input-demo-editor-id" type="hidden" value="">
+            <div class="row g-2 mb-3">
+              <div class="col-12 col-md-6">
+                <label for="input-demo-editor-nombre" class="form-label">Nombre de la Rutina</label>
+                <input id="input-demo-editor-nombre" type="text" class="form-control form-control-sm" placeholder="Ej: Giro y Excavación Pro" required value="Mi Rutina de Excavación">
+              </div>
+              <div class="col-12 col-md-6">
+                <label for="input-demo-editor-desc" class="form-label">Descripción</label>
+                <input id="input-demo-editor-desc" type="text" class="form-control form-control-sm" placeholder="Secuencia de movimientos continuos">
+              </div>
+            </div>
+
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <span class="small text-warning fw-bold">Pasos Ordenados (Mín. 200 ms, Máx. 10 s):</span>
+              <button id="btn-editor-agregar-paso" type="button" class="btn btn-sm btn-outline-warning">
+                <i class="bi bi-plus-lg"></i> Agregar Paso
+              </button>
+            </div>
+
+            <div id="lista-pasos-editor">
+              <!-- Pasos inyectados dinámicamente por demo-editor.js -->
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer py-2">
+          <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <button type="submit" form="form-editor-demo" class="btn btn-sm btn-warning text-dark fw-bold">
+            <i class="bi bi-check2-circle"></i> Guardar Rutina
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de Autenticación Profesional por Usuario, Contraseña y Rol (RBAC) -->
+  <div class="modal fade retro-modal" id="modal-login" tabindex="-1" aria-labelledby="modalLoginLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header py-2">
+          <h2 class="modal-title h6 fw-bold mb-0" id="modalLoginLabel">
+            <i class="bi bi-shield-lock me-1"></i> Control de Acceso · Iniciar Sesión
+          </h2>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+        </div>
+        <form id="form-login" autocomplete="off">
+          <div class="modal-body">
+            <div class="retro-lcd-banner mb-3">
+              Ingresa tus credenciales personales. El sistema habilita tus permisos según tu rol asignado (<strong>Administrador</strong>, <strong>Comprador</strong> o <strong>Invitado</strong>).
+            </div>
+            <div id="login-error-alert" class="alert alert-danger py-2 px-3 small d-none" role="alert"></div>
+            <div class="mb-2">
+              <label for="login-email" class="form-label">Usuario o Correo Electrónico</label>
+              <div class="input-group input-group-sm">
+                <span class="input-group-text retro-input-addon"><i class="bi bi-person-badge"></i></span>
+                <input id="login-email" type="text" class="form-control" required placeholder="Ej: admin, carlos, sofia o correo@dominio.com">
+              </div>
+            </div>
+            <div class="mb-3">
+              <label for="login-password" class="form-label">Contraseña</label>
+              <div class="input-group input-group-sm">
+                <span class="input-group-text retro-input-addon"><i class="bi bi-key"></i></span>
+                <input id="login-password" type="password" class="form-control" required placeholder="••••••••">
+                <button type="button" id="btn-toggle-login-pass" class="btn btn-outline-secondary" title="Mostrar u ocultar contraseña" aria-label="Mostrar u ocultar contraseña">
+                  <i class="bi bi-eye"></i>
+                </button>
+              </div>
+            </div>
+
+            <div class="border-top border-secondary border-opacity-50 pt-2">
+              <button class="btn btn-link btn-sm text-warning text-decoration-none p-0 d-flex align-items-center gap-1 fw-semibold" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-cuentas-login" aria-expanded="false">
+                <i class="bi bi-person-lines-fill"></i> <span>Directorio de cuentas registradas</span>
+              </button>
+              <div class="collapse mt-2" id="collapse-cuentas-login">
+                <div id="lista-cuentas-login" class="d-flex flex-column gap-1 small">
+                  <!-- Renderizado dinámicamente con las cuentas registradas -->
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer py-2">
+            <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+            <button type="submit" id="btn-login-submit" class="btn btn-sm btn-warning text-dark fw-bold px-3">
+              <i class="bi bi-box-arrow-in-right me-1"></i> Iniciar Sesión
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Reutilizable de Edición Administrativa (Modelos / Capacidades / Unidades / Usuarios) -->
+  <div class="modal fade retro-modal" id="modal-admin-editar" tabindex="-1" aria-labelledby="modalAdminEditarLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header py-2">
+          <h2 class="modal-title h6 fw-bold mb-0" id="modalAdminEditarLabel">Editar Recurso</h2>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+        </div>
+        <div id="modal-admin-editar-body" class="modal-body"></div>
+        <div id="modal-admin-editar-footer" class="modal-footer py-2">
+          <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">Cerrar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Notificaciones Toast -->
+  <div id="app-toast-container" class="app-toast-container" aria-live="polite" aria-atomic="true"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <script type="module" src="./assets/js/main.js"></script>
 </body>
 </html>

@@ -1,6 +1,25 @@
 const siglas = new Set(["LED", "LEDS", "USB", "GPS", "RGB", "IA"]);
 
 /**
+ * Normaliza el nombre comercial/unidad de la excavadora principal a "Excavator 3000"
+ * incluso cuando proviene del registro histórico #1 en Amazon RDS ("Excavadora del IOT").
+ */
+export function normalizar_nombre_vehiculo(nombre) {
+  const txt = String(nombre ?? "").trim();
+  if (!txt) return "Excavator 3000";
+  const lower = txt.toLowerCase();
+  if (
+    lower === "excavadora del iot" ||
+    lower === "excavadora iot" ||
+    lower === "excavadora de exhibición" ||
+    lower === "excavadora de exhibicion"
+  ) {
+    return "Excavator 3000";
+  }
+  return txt.replace(/excavadora del iot/gi, "Excavator 3000");
+}
+
+/**
  * da formato legible para presentacion en pantalla sin alterar datos crudos
  * ej: "GIRAR_DERECHA" -> "Girar Derecha", "giro 90 der" -> "Giro 90 Der"
  */

@@ -5,12 +5,33 @@ export class CommandController {
     this.api = api_client;
     this.ui = ui_manager;
     this.catalogo = [];
+    this.catalogo_completo = [];
+    this.codigos_permitidos_filtro = null;
     this.comando_detener = null;
     this.mapa_direcciones = {};
     this.ultimo_comando_enviado_id = null;
     this.solicitud_en_curso = false;
     this.secuencia_peticion = 0;
     this.demo_activa = false;
+  }
+
+  establecer_filtro_codigos(codigos_permitidos) {
+    if (Array.isArray(codigos_permitidos) && codigos_permitidos.length > 0) {
+      this.codigos_permitidos_filtro = new Set(codigos_permitidos.map((c) => Number(c)));
+      this.codigos_permitidos_filtro.add(9); // DETENER siempre permitido por seguridad
+    } else {
+      this.codigos_permitidos_filtro = null;
+    }
+    if (this.catalogo_completo.length > 0) {
+      this.configurar_catalogo(this.catalogo_completo);
+    }
+  }
+
+  reiniciar_estado_control() {
+    this.ultimo_comando_enviado_id = null;
+    this.solicitud_en_curso = false;
+    this.demo_activa = false;
+    this.secuencia_peticion += 1;
   }
 
   _normalizar_texto(texto) {
@@ -59,7 +80,11 @@ export class CommandController {
   }
 
   configurar_catalogo(lista_comandos) {
-    this.catalogo = Array.isArray(lista_comandos) ? lista_comandos : [];
+    this.catalogo_completo = Array.isArray(lista_comandos) ? lista_comandos : [];
+    const conjunto = this.codigos_permitidos_filtro;
+    this.catalogo = conjunto
+      ? this.catalogo_completo.filter((cmd) => conjunto.has(Number(cmd.codigo)))
+      : [...this.catalogo_completo];
     this.mapa_direcciones = {};
     this.comando_detener = null;
 

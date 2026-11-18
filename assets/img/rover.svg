@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 130" role="img" aria-label="Rover Explorador X1">
+  <rect width="240" height="130" rx="14" fill="#181920"/>
+  <rect x="4" y="4" width="232" height="122" rx="11" fill="none" stroke="#4cc9f0" stroke-opacity="0.28" stroke-width="2"/>
+  <!-- Chasis 4x4 -->
+  <rect x="46" y="64" width="148" height="22" rx="6" fill="#2e597a" stroke="#102130" stroke-width="3"/>
+  <rect x="64" y="46" width="96" height="20" rx="5" fill="#4cc9f0" stroke="#184e77" stroke-width="2.5"/>
+  <!-- Sensor ultrasonico -->
+  <rect x="160" y="50" width="20" height="12" rx="3" fill="#cfd6e3" stroke="#101116" stroke-width="2"/>
+  <circle cx="166" cy="56" r="3" fill="#1b1c22"/>
+  <circle cx="174" cy="56" r="3" fill="#1b1c22"/>
+  <!-- 4 Ruedas -->
+  <circle cx="64" cy="96" r="14" fill="#32353d" stroke="#101116" stroke-width="3"/>
+  <circle cx="64" cy="96" r="5" fill="#4cc9f0"/>
+  <circle cx="104" cy="96" r="14" fill="#32353d" stroke="#101116" stroke-width="3"/>
+  <circle cx="104" cy="96" r="5" fill="#4cc9f0"/>
+  <circle cx="144" cy="96" r="14" fill="#32353d" stroke="#101116" stroke-width="3"/>
+  <circle cx="144" cy="96" r="5" fill="#4cc9f0"/>
+  <circle cx="180" cy="96" r="14" fill="#32353d" stroke="#101116" stroke-width="3"/>
+  <circle cx="180" cy="96" r="5" fill="#4cc9f0"/>
+  <!-- Antena telemetria -->
+  <line x1="78" y1="46" x2="78" y2="22" stroke="#98a0b0" stroke-width="2.5" stroke-linecap="round"/>
+  <circle cx="78" cy="20" r="3.5" fill="#4cc9f0"/>
+</svg>
+

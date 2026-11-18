@@ -11,14 +11,40 @@ export class WsClient {
     this.intentos_reconexion = 0;
     this.tuvo_conexion_previa = false;
     this.id_vehiculo_actual = config.id_vehiculo;
+    this._fn_get_auth_params = null;
+  }
+
+  establecer_proveedor_auth(fn_params) {
+    this._fn_get_auth_params = typeof fn_params === "function" ? fn_params : null;
   }
 
   esta_conectado() {
     return Boolean(this.socket && this.socket.readyState === WebSocket.OPEN);
   }
 
+  _construir_url_ws(id_vehiculo) {
+    const base = `${config.ws_base_url}${config.endpoints.ws_vehiculo(id_vehiculo)}`;
+    const params = new URLSearchParams();
+    if (this._fn_get_auth_params) {
+      const auth = this._fn_get_auth_params() || {};
+      if (auth.token && !String(auth.token).startsWith("jwt_local_")) {
+        params.set("token", auth.token);
+      }
+      if (auth.guest_token) {
+        params.set("guest_token", auth.guest_token);
+      }
+    }
+    const qs = params.toString();
+    return qs ? `${base}?${qs}` : base;
+  }
+
   conectar(id_vehiculo = config.id_vehiculo) {
-    this.id_vehiculo_actual = id_vehiculo;
+    const nuevo_id = Number(id_vehiculo);
+    if (this.socket && this.id_vehiculo_actual !== nuevo_id) {
+      this.desconectar();
+    }
+
+    this.id_vehiculo_actual = nuevo_id;
     this.manual_close = false;
     this._limpiar_timer();
 
@@ -29,7 +55,7 @@ export class WsClient {
       return;
     }
 
-    const ws_url = `${config.ws_base_url}${config.endpoints.ws_vehiculo(id_vehiculo)}`;
+    const ws_url = this._construir_url_ws(nuevo_id);
     const etiqueta = this.tuvo_conexion_previa ? "Reconectando" : "Conectando";
     this.on_status_change("connecting", etiqueta);
 
@@ -61,8 +87,13 @@ export class WsClient {
         this.on_status_change("offline", "Desconectado");
       };
 
-      this.socket.onclose = () => {
+      this.socket.onclose = (ev) => {
         this.socket = null;
+        if (ev && (ev.code === 4401 || ev.code === 4403 || ev.code === 4003 || ev.code === 4008)) {
+          this.manual_close = true;
+          this.on_status_change("offline", ev.code === 4008 ? "Prueba finalizada" : "Acceso denegado");
+          return;
+        }
         this.on_status_change("offline", "Desconectado");
         if (!this.manual_close) {
           this._programar_reconexion();

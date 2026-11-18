@@ -1,5 +1,5 @@
 import { config } from "./config.js";
-import { formatear_fecha_hora, resolver_nombre_evento } from "./format-utils.js";
+import { formatear_fecha_hora, normalizar_nombre_vehiculo, resolver_nombre_evento } from "./format-utils.js";
 
 export class MonitoringSync {
   constructor(api_client, on_state_change, on_rds_status = null) {
@@ -8,7 +8,7 @@ export class MonitoringSync {
     this.on_rds_status = on_rds_status;
 
     this.id_vehiculo = Number(config.id_vehiculo);
-    this.nombre_vehiculo = `Vehículo #${this.id_vehiculo}`;
+    this.nombre_vehiculo = this.id_vehiculo === 1 ? "Excavator 3000" : `Vehículo #${this.id_vehiculo}`;
     this.catalogo_demos = [];
     this.demo_activa = null;
 
@@ -31,8 +31,8 @@ export class MonitoringSync {
 
   establecer_nombre_vehiculo(nombre) {
     if (nombre && String(nombre).trim()) {
-      this.nombre_vehiculo = String(nombre).trim();
-      if (this.estado_actual && !this.estado_actual.vehiculo) {
+      this.nombre_vehiculo = normalizar_nombre_vehiculo(nombre);
+      if (this.estado_actual) {
         this.estado_actual.vehiculo = this.nombre_vehiculo;
       }
       this._notificar();
@@ -41,6 +41,34 @@ export class MonitoringSync {
 
   establecer_catalogo_demos(demos) {
     this.catalogo_demos = Array.isArray(demos) ? demos : [];
+  }
+
+  establecer_vehiculo(id_vehiculo, nombre = null) {
+    const id_num = Number(id_vehiculo);
+    if (!id_num) return;
+    if (this._debounce_timer) {
+      clearTimeout(this._debounce_timer);
+      this._debounce_timer = null;
+    }
+    this.id_vehiculo = id_num;
+    this.nombre_vehiculo =
+      nombre && String(nombre).trim()
+        ? normalizar_nombre_vehiculo(nombre)
+        : id_num === 1
+        ? "Excavator 3000"
+        : `Vehículo #${id_num}`;
+    this.catalogo_demos = [];
+    this.demo_activa = null;
+    this.estado_actual = null;
+    this.historial = [];
+    this.carga_estado = "cargando";
+    this.carga_historial = "cargando";
+    this.error_estado = "";
+    this.error_historial = "";
+    this._claves_wss_vistas = [];
+    this.seq_estado += 1;
+    this.seq_historial += 1;
+    this._notificar();
   }
 
   registrar_demo_local(estado, nombre_demo) {
@@ -219,7 +247,7 @@ export class MonitoringSync {
       comando: String(est.comando),
       codigo: est.codigo ?? null,
       id_comando: est.id_comando ?? null,
-      vehiculo: est.vehiculo || this.nombre_vehiculo,
+      vehiculo: normalizar_nombre_vehiculo(est.vehiculo || this.nombre_vehiculo),
       origen: est.origen || "Estado inicial WSS",
       conectado: est.conectado ?? null,
       fecha_info,
@@ -265,7 +293,7 @@ export class MonitoringSync {
       codigo: datos.codigo ?? null,
       id_comando: datos.id_comando ?? null,
       id_historial: datos.id_historial ?? null,
-      vehiculo: datos.vehiculo || this.nombre_vehiculo,
+      vehiculo: normalizar_nombre_vehiculo(datos.vehiculo || this.nombre_vehiculo),
       origen: datos.origen || "Evento en vivo WSS",
       conectado: datos.conectado ?? null,
       fecha_info,
@@ -418,7 +446,7 @@ export class MonitoringSync {
       comando: String(data.comando),
       codigo: data.codigo ?? null,
       id_comando: data.id_comando ?? null,
-      vehiculo: data.vehiculo || this.nombre_vehiculo,
+      vehiculo: normalizar_nombre_vehiculo(data.vehiculo || this.nombre_vehiculo),
       origen: "Consultado desde RDS",
       conectado: data.conectado ?? null,
       fecha_info,

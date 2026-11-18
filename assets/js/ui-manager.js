@@ -1,4 +1,4 @@
-import { formatear_nombre_comando } from "./format-utils.js";
+import { formatear_nombre_comando, normalizar_nombre_vehiculo } from "./format-utils.js";
 
 export class UiManager {
   constructor() {
@@ -55,7 +55,7 @@ export class UiManager {
 
   actualizar_datos_vehiculo(vehiculo) {
     if (!vehiculo) return;
-    this.el_vehicle_name.textContent = vehiculo.nombre || "Vehículo";
+    this.el_vehicle_name.textContent = normalizar_nombre_vehiculo(vehiculo.nombre || "Excavator 3000");
     this.el_vehicle_meta.textContent = "Control remoto en tiempo real";
   }
 
