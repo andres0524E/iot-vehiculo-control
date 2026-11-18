@@ -95,10 +95,10 @@ class Settings:
         self.db_name: str = os.getenv("DB_NAME", "vehiculo_iot")
         self.db_connect_timeout: int = _parse_int(os.getenv("DB_CONNECT_TIMEOUT"), 5)
 
-        self.jwt_secret: str = os.getenv(
-            "JWT_SECRET",
-            "dev-only-jwt-key-not-for-production-use-32b",
-        )
+        raw_jwt = os.getenv("JWT_SECRET") or os.getenv("API_KEY") or ""
+        if raw_jwt and len(raw_jwt) < 32:
+            raw_jwt = f"{raw_jwt}-iot-jwt-secret-key-padding-32b"
+        self.jwt_secret: str = raw_jwt or "dev-only-jwt-key-not-for-production-use-32b"
         self.jwt_algorithm: str = os.getenv("JWT_ALGORITHM", "HS256")
         self.jwt_expire_minutes: int = _parse_int(os.getenv("JWT_EXPIRE_MINUTES"), 480)
 
